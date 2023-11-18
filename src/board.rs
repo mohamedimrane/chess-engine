@@ -1,4 +1,4 @@
-use crate::piece::Piece;
+use crate::{errors::FenError, piece::Piece};
 
 pub struct Board {
     pieces: [u8; 64],
@@ -33,6 +33,59 @@ impl Board {
         }
 
         board
+    }
+
+    fn from_fen(fen: &str) -> Result<Self, FenError> {
+        let splited_fen: Vec<&str> = fen.split('/').collect();
+        let mut board = Self::default();
+
+        let pieces = splited_fen[0].chars();
+        let mut file: usize = 0;
+        let mut rank: usize = 0;
+        for c in pieces {
+            if c == '/' {
+                rank += 1;
+                file = 0;
+
+                if rank > 8 {
+                    return Err(FenError::RankTooBig(rank));
+                }
+                continue;
+            }
+
+            if c.is_numeric() {
+                let num = c.to_digit(10).unwrap() as usize;
+                if num + file > 8 {
+                    return Err(FenError::FileTooBig(num));
+                }
+                file += num;
+                continue;
+            }
+
+            if c.is_alphabetic() {
+                let color = match c {
+                    c if c.is_uppercase() => Piece::White,
+                    c if c.is_lowercase() => Piece::Black,
+                    _ => return Err(FenError::CharNotReconized),
+                };
+
+                let kind = match c.to_lowercase().next().unwrap() {
+                    'p' => Piece::Pawn,
+                    'n' => Piece::Knight,
+                    'b' => Piece::Bishop,
+                    'r' => Piece::Rook,
+                    'q' => Piece::Queen,
+                    'k' => Piece::King,
+                    _ => return Err(FenError::CharNotReconized),
+                };
+
+                board.pieces[rank * 8 + file] = color | kind;
+                file += 1;
+                continue;
+            }
+        }
+
+        Ok(board)
     }
 }
 
