@@ -1,4 +1,6 @@
 #[non_exhaustive]
+/// A piece is represented by 6 bits
+///        `00`->color `0000`->kind
 pub struct Piece;
 
 impl Piece {
