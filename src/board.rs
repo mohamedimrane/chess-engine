@@ -1,3 +1,3 @@
 pub struct Board {
-    pieces: [i8; 64],
+    pieces: [u8; 64],
 }
