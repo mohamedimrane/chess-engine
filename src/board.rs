@@ -9,13 +9,13 @@ impl Board {
         let mut board = Self::default();
 
         board.pieces[0] = Piece::White | Piece::Rook;
-        board.pieces[2] = Piece::White | Piece::Knight;
-        board.pieces[3] = Piece::White | Piece::Bishop;
-        board.pieces[4] = Piece::White | Piece::Queen;
-        board.pieces[5] = Piece::White | Piece::King;
-        board.pieces[6] = Piece::White | Piece::Bishop;
-        board.pieces[7] = Piece::White | Piece::Knight;
-        board.pieces[8] = Piece::White | Piece::Rook;
+        board.pieces[1] = Piece::White | Piece::Knight;
+        board.pieces[2] = Piece::White | Piece::Bishop;
+        board.pieces[3] = Piece::White | Piece::Queen;
+        board.pieces[4] = Piece::White | Piece::King;
+        board.pieces[5] = Piece::White | Piece::Bishop;
+        board.pieces[6] = Piece::White | Piece::Knight;
+        board.pieces[7] = Piece::White | Piece::Rook;
         for x in 0..8 {
             board.pieces[8 + x] = Piece::White | Piece::Pawn;
         }
