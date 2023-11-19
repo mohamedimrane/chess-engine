@@ -13,6 +13,24 @@ impl Piece {
     pub const Queen: u8 = 0b101; // 0101 => 5
     pub const King: u8 = 0b110; // 0111 => 6
 
-    pub const White: u8 = 0b10000; // 1000 => 8
-    pub const Black: u8 = 0b100000; // 10000 => 16
+    pub const White: u8 = 0b00010000; // 1000 => 16
+    pub const Black: u8 = 0b00100000; // 10000 => 32
+
+    const typeMask: u8 = 0b00001111;
+
+    const whiteMask: u8 = 0b00010000;
+    const blackMask: u8 = 0b00100000;
+    const colourMask: u8 = Self::whiteMask | Self::blackMask;
+
+    pub fn colour(piece: u8) -> u8 {
+        piece & Self::colourMask
+    }
+
+    pub fn pieceType(piece: u8) -> u8 {
+        piece & Self::typeMask
+    }
+
+    pub fn isColour(piece: u8, colour: u8) -> bool {
+        piece & Self::colourMask == colour
+    }
 }
