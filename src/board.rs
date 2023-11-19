@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{errors::FenError, piece::Piece};
 
 pub struct Board {
@@ -5,7 +7,7 @@ pub struct Board {
 }
 
 impl Board {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let mut board = Self::default();
 
         board.pieces[0] = Piece::White | Piece::Rook;
@@ -86,6 +88,49 @@ impl Board {
         }
 
         Ok(board)
+    }
+
+    pub fn stringify(&self, perspective: u8) -> String {
+        let mut string = String::new();
+
+        for rank in 0..8 {
+            string.push_str(&"----".repeat(8));
+            string.push('\n');
+            string.push_str("| ");
+            for file in 0..8 {
+                let perspective = match perspective {
+                    Piece::White => (7 - rank, file),
+                    Piece::Black => (rank, 7 - file),
+                    _ => panic!("strigification: invalid perspective"),
+                };
+
+                let piece = self.pieces[perspective.0 * 8 + perspective.1];
+                let piece_color = piece >> 4 << 4;
+                let piece_kind = piece << 4 >> 4;
+
+                let mut piece_repr = match piece_kind {
+                    Piece::None => ' ',
+                    Piece::Pawn => 'p',
+                    Piece::Knight => 'n',
+                    Piece::Bishop => 'b',
+                    Piece::Rook => 'r',
+                    Piece::Queen => 'q',
+                    Piece::King => 'k',
+                    _ => unreachable!(),
+                };
+
+                if piece_color == Piece::White {
+                    piece_repr = piece_repr.to_uppercase().next().unwrap();
+                }
+
+                string.push(piece_repr);
+                string.push_str(" | ");
+            }
+            string.push('\n');
+        }
+        string.push_str(&"----".repeat(8));
+
+        string
     }
 }
 
