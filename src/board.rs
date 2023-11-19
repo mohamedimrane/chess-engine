@@ -105,10 +105,10 @@ impl Board {
                 };
 
                 let piece = self.pieces[perspective.0 * 8 + perspective.1];
-                let piece_color = piece >> 4 << 4;
-                let piece_kind = piece << 4 >> 4;
+                let piece_color = Piece::colour(piece);
+                let piece_type = Piece::pieceType(piece);
 
-                let mut piece_repr = match piece_kind {
+                let mut piece_repr = match piece_type {
                     Piece::None => ' ',
                     Piece::Pawn => 'p',
                     Piece::Knight => 'n',
