@@ -7,6 +7,8 @@ pub struct Board {
 }
 
 impl Board {
+    pub fn make_move(&mut self, moveToMake: u16) {}
+
     pub fn new() -> Self {
         let mut board = Self::default();
 
