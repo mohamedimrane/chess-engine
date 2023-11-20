@@ -1,13 +1,27 @@
-use std::fmt::Display;
-
-use crate::{errors::FenError, piece::Piece};
+use crate::{errors::FenError, moves::Move, piece::Piece};
 
 pub struct Board {
     pieces: [u8; 64],
 }
 
 impl Board {
-    pub fn make_move(&mut self, moveToMake: u16) {}
+    pub fn make_move(&mut self, v_move: u16) {
+        let departure_file = Move::departureFile(v_move);
+        let departure_rank = Move::departureRank(v_move);
+        let target_file = Move::targetFile(v_move);
+        let target_rank = Move::targetRank(v_move);
+
+        // println!(
+        //     "{}:{} -> {}:{}",
+        //     departure_file, departure_rank, target_file, target_rank
+        // );
+
+        let departure_square = (departure_rank * 8 + departure_file) as usize;
+        let target_square = (target_rank * 8 + target_file) as usize;
+
+        self.pieces[target_square] = self.pieces[departure_square];
+        self.pieces[departure_square] = Piece::None;
+    }
 
     pub fn new() -> Self {
         let mut board = Self::default();
