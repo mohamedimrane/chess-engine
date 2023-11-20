@@ -41,15 +41,15 @@ impl Move {
     }
 
     pub fn departureRank(v_move: u16) -> u8 {
-        (v_move & Move::departureRankMask >> 3) as u8
+        ((v_move & Move::departureRankMask) >> 3) as u8
     }
 
     pub fn targetFile(v_move: u16) -> u8 {
-        (v_move & Move::targetFileMask >> 6) as u8
+        ((v_move & Move::targetFileMask) >> 6) as u8
     }
 
     pub fn targetRank(v_move: u16) -> u8 {
-        (v_move & Move::targetRankMask >> 9) as u8
+        ((v_move & Move::targetRankMask) >> 9) as u8
     }
 
     pub fn capture(v_move: u16) -> bool {
