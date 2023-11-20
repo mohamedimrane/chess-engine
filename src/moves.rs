@@ -33,7 +33,7 @@ impl Move {
         target_file: u16,
         target_rank: u16,
     ) -> u16 {
-        departure_file & departure_rank << 3 & target_file << 6 & target_rank << 9
+        departure_file | departure_rank << 3 | target_file << 6 | target_rank << 9
     }
 
     pub fn departureFile(v_move: u16) -> u8 {
