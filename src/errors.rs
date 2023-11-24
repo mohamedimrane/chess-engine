@@ -3,4 +3,5 @@ pub enum FenError {
     FileTooBig(usize),
     RankTooBig(usize),
     InvalidColor,
+    InvalidCastlingCharacter,
 }

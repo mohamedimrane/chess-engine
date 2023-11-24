@@ -86,9 +86,18 @@ impl Board {
         };
 
         for right in splited_fen[2].chars() {
-            // board.castling_rights |= match right {
-            //     "q" => CastlingRights::BlackCanCastle
-            // }
+            board.castling_rights |= match right {
+                'K' => CastlingRights::WhiteCanShortCastle,
+                'Q' => CastlingRights::WhiteCanLongCastle,
+                'k' => CastlingRights::BlackCanShortCastle,
+                'q' => CastlingRights::BlackCanLongCastle,
+                '-' => {
+                    board.castling_rights =
+                        CastlingRights::WhiteCanNotCastle | CastlingRights::BlackCanNotCastle;
+                    break;
+                }
+                _ => return Err(FenError::InvalidCastlingCharacter),
+            }
         }
 
         let pieces = splited_fen[0].chars();
