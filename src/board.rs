@@ -140,7 +140,7 @@ impl Board {
                     _ => return Err(FenError::CharNotReconized),
                 };
 
-                board.pieces[rank * 8 + file] = color | kind;
+                board.pieces[(7 - rank) * 8 + file] = color | kind;
                 file += 1;
                 continue;
             }
