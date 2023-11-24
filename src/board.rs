@@ -11,6 +11,7 @@ impl Board {
         let target_file = Move::target_file(v_move);
         let target_rank = Move::target_rank(v_move);
         let promotion = Move::is_promotion(v_move);
+        let castling = Move::is_castling(v_move);
         let special_one = Move::special_one(v_move);
         let special_two = Move::special_two(v_move);
 
@@ -32,6 +33,10 @@ impl Board {
             self.pieces[departure_square] = Piece::None;
 
             return;
+        }
+
+        if castling {
+            todo!()
         }
 
         self.pieces[target_square] = self.pieces[departure_square];

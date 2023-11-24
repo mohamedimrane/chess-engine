@@ -29,6 +29,8 @@ impl Move {
 
     pub const promotion_mask: u16 = 0b0010000000000000;
 
+    pub const castling_mask: u16 = 0b1100000000000000;
+
     pub const special_one_mask: u16 = 0b0100000000000000;
     pub const special_two_mask: u16 = 0b1000000000000000;
 
@@ -67,6 +69,10 @@ impl Move {
 
     pub fn promotion_type(v_move: u16) -> u16 {
         v_move >> 13 << 13
+    }
+
+    pub fn is_castling(v_move: u16) -> bool {
+        (v_move & Move::castling_mask) == Self::castling_mask
     }
 
     pub fn special_one(v_move: u16) -> bool {
