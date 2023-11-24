@@ -79,6 +79,18 @@ impl Board {
         let splited_fen: Vec<&str> = fen.split('/').collect();
         let mut board = Self::default();
 
+        board.colour_to_move = match splited_fen[1].chars().next().unwrap() {
+            'w' => Piece::White,
+            'b' => Piece::Black,
+            _ => return Err(FenError::InvalidColor),
+        };
+
+        for right in splited_fen[2].chars() {
+            // board.castling_rights |= match right {
+            //     "q" => CastlingRights::BlackCanCastle
+            // }
+        }
+
         let pieces = splited_fen[0].chars();
         let mut file: usize = 0;
         let mut rank: usize = 0;
