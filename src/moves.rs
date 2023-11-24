@@ -27,6 +27,11 @@ impl Move {
 
     pub const captureMask: u16 = 0b0001000000000000;
 
+    pub const promotionMask: u16 = 0b0010000000000000;
+
+    pub const specialOneMask: u16 = 0b0100000000000000;
+    pub const specialTwoMask: u16 = 0b1000000000000000;
+
     pub fn new_move(
         departure_file: u16,
         departure_rank: u16,
@@ -54,5 +59,17 @@ impl Move {
 
     pub fn capture(v_move: u16) -> bool {
         (v_move & Move::captureMask) == Self::Capture
+    }
+
+    pub fn isPromotion(v_move: u16) -> bool {
+        (v_move & Move::promotionMask) == Self::promotionMask
+    }
+
+    pub fn special_one(v_move: u16) -> bool {
+        (v_move & Move::specialOneMask) == Self::specialOneMask
+    }
+
+    pub fn special_two(v_move: u16) -> bool {
+        (v_move & Move::specialTwoMask) == Self::specialTwoMask
     }
 }

@@ -10,6 +10,9 @@ impl Board {
         let departure_rank = Move::departureRank(v_move);
         let target_file = Move::targetFile(v_move);
         let target_rank = Move::targetRank(v_move);
+        let promotion = Move::isPromotion(v_move);
+        let special_one = Move::special_one(v_move);
+        let special_two = Move::special_two(v_move);
 
         // println!(
         //     "{}:{} -> {}:{}",
