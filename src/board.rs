@@ -6,11 +6,11 @@ pub struct Board {
 
 impl Board {
     pub fn make_move(&mut self, v_move: u16) {
-        let departure_file = Move::departureFile(v_move);
-        let departure_rank = Move::departureRank(v_move);
-        let target_file = Move::targetFile(v_move);
-        let target_rank = Move::targetRank(v_move);
-        let promotion = Move::isPromotion(v_move);
+        let departure_file = Move::departure_file(v_move);
+        let departure_rank = Move::departure_rank(v_move);
+        let target_file = Move::target_file(v_move);
+        let target_rank = Move::target_rank(v_move);
+        let promotion = Move::is_promotion(v_move);
         let special_one = Move::special_one(v_move);
         let special_two = Move::special_two(v_move);
 

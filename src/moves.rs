@@ -20,17 +20,17 @@ impl Move {
 
     pub const Capture: u16 = 0b0001000000000000;
 
-    pub const departureFileMask: u16 = 0b0000000000000111;
-    pub const departureRankMask: u16 = 0b0000000000111000;
-    pub const targetFileMask: u16 = 0b0000000111000000;
-    pub const targetRankMask: u16 = 0b0000111000000000;
+    pub const departure_file_mask: u16 = 0b0000000000000111;
+    pub const departure_rank_mask: u16 = 0b0000000000111000;
+    pub const target_file_mask: u16 = 0b0000000111000000;
+    pub const target_rank_mask: u16 = 0b0000111000000000;
 
-    pub const captureMask: u16 = 0b0001000000000000;
+    pub const capture_mask: u16 = 0b0001000000000000;
 
-    pub const promotionMask: u16 = 0b0010000000000000;
+    pub const promotion_mask: u16 = 0b0010000000000000;
 
-    pub const specialOneMask: u16 = 0b0100000000000000;
-    pub const specialTwoMask: u16 = 0b1000000000000000;
+    pub const special_one_mask: u16 = 0b0100000000000000;
+    pub const special_two_mask: u16 = 0b1000000000000000;
 
     pub fn new_move(
         departure_file: u16,
@@ -41,35 +41,35 @@ impl Move {
         departure_file | departure_rank << 3 | target_file << 6 | target_rank << 9
     }
 
-    pub fn departureFile(v_move: u16) -> u8 {
-        (v_move & Move::departureFileMask) as u8
+    pub fn departure_file(v_move: u16) -> u8 {
+        (v_move & Move::departure_file_mask) as u8
     }
 
-    pub fn departureRank(v_move: u16) -> u8 {
-        ((v_move & Move::departureRankMask) >> 3) as u8
+    pub fn departure_rank(v_move: u16) -> u8 {
+        ((v_move & Move::departure_rank_mask) >> 3) as u8
     }
 
-    pub fn targetFile(v_move: u16) -> u8 {
-        ((v_move & Move::targetFileMask) >> 6) as u8
+    pub fn target_file(v_move: u16) -> u8 {
+        ((v_move & Move::target_file_mask) >> 6) as u8
     }
 
-    pub fn targetRank(v_move: u16) -> u8 {
-        ((v_move & Move::targetRankMask) >> 9) as u8
+    pub fn target_rank(v_move: u16) -> u8 {
+        ((v_move & Move::target_rank_mask) >> 9) as u8
     }
 
     pub fn capture(v_move: u16) -> bool {
-        (v_move & Move::captureMask) == Self::Capture
+        (v_move & Move::capture_mask) == Self::Capture
     }
 
-    pub fn isPromotion(v_move: u16) -> bool {
-        (v_move & Move::promotionMask) == Self::promotionMask
+    pub fn is_promotion(v_move: u16) -> bool {
+        (v_move & Move::promotion_mask) == Self::promotion_mask
     }
 
     pub fn special_one(v_move: u16) -> bool {
-        (v_move & Move::specialOneMask) == Self::specialOneMask
+        (v_move & Move::special_one_mask) == Self::special_one_mask
     }
 
     pub fn special_two(v_move: u16) -> bool {
-        (v_move & Move::specialTwoMask) == Self::specialTwoMask
+        (v_move & Move::special_two_mask) == Self::special_two_mask
     }
 }
