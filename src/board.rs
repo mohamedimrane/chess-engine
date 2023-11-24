@@ -14,13 +14,25 @@ impl Board {
         let special_one = Move::special_one(v_move);
         let special_two = Move::special_two(v_move);
 
-        // println!(
-        //     "{}:{} -> {}:{}",
-        //     departure_file, departure_rank, target_file, target_rank
-        // );
-
         let departure_square = (departure_rank * 8 + departure_file) as usize;
         let target_square = (target_rank * 8 + target_file) as usize;
+
+        if promotion {
+            let promotion_type = Move::promotion_type(v_move);
+            let piece_to_promote_to = match promotion_type {
+                Move::PromoteToKnight => Piece::Knight,
+                Move::PromoteToBishop => Piece::Bishop,
+                Move::PromoteToRook => Piece::Rook,
+                Move::PromoteToQueen => Piece::Queen,
+                _ => unreachable!(),
+            };
+            let piece_colour = Piece::colour(self.pieces[departure_square]);
+
+            self.pieces[target_square] = piece_colour | piece_to_promote_to;
+            self.pieces[departure_square] = Piece::None;
+
+            return;
+        }
 
         self.pieces[target_square] = self.pieces[departure_square];
         self.pieces[departure_square] = Piece::None;

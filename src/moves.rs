@@ -65,6 +65,10 @@ impl Move {
         (v_move & Move::promotion_mask) == Self::promotion_mask
     }
 
+    pub fn promotion_type(v_move: u16) -> u16 {
+        v_move >> 13 << 13
+    }
+
     pub fn special_one(v_move: u16) -> bool {
         (v_move & Move::special_one_mask) == Self::special_one_mask
     }

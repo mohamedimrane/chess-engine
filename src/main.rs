@@ -19,6 +19,9 @@ fn main() {
     let v_move = Move::new_move(2, 0, 5, 3);
     board.make_move(v_move);
 
+    let v_move = Move::new_move(0, 0, 4, 7) | Move::PromoteToQueen | Move::Capture;
+    board.make_move(v_move);
+
     println!("{}", board.stringify(Piece::White));
     println!("{}", v_move);
 }
