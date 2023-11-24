@@ -1,7 +1,9 @@
-use crate::{errors::FenError, moves::Move, piece::Piece};
+use crate::{castling_rights::CastlingRights, errors::FenError, moves::Move, piece::Piece};
 
 pub struct Board {
     pieces: [u8; 64],
+    colour_to_move: u8,
+    castling_rights: u8,
 }
 
 impl Board {
@@ -172,6 +174,10 @@ impl Board {
 
 impl Default for Board {
     fn default() -> Self {
-        Self { pieces: [0; 64] }
+        Self {
+            pieces: [0; 64],
+            colour_to_move: Piece::White,
+            castling_rights: CastlingRights::WhiteCanCastle | CastlingRights::BlackCanCastle,
+        }
     }
 }

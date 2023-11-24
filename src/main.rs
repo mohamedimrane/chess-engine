@@ -1,6 +1,7 @@
 use crate::{board::Board, moves::Move, piece::Piece};
 
 mod board;
+mod castling_rights;
 mod errors;
 mod moves;
 mod piece;
