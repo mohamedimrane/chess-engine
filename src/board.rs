@@ -44,13 +44,29 @@ impl Board {
         }
 
         if castling {
+            let castling_rights = CastlingRights::rights(self.castling_rights, active_colour);
+
+            if castling_rights == CastlingRights::CanNotCastle {
+                return;
+            }
+
             let (king_file, king_rank) = match active_colour {
                 Color::White => (4, 0),
                 Color::Black => (4, 7),
                 _ => unreachable!(),
             };
 
-            if special_one {
+            if special_one && CastlingRights::can_short_castle(castling_rights) {
+                self.castling_rights = match active_colour {
+                    Color::White => {
+                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
+                    }
+                    Color::Black => {
+                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
+                    }
+                    _ => unreachable!(),
+                };
+
                 let king_index = king_rank * 8 + king_file;
                 let king = self.pieces[king_index];
                 let rook = self.pieces[king_index + 3];
@@ -60,7 +76,17 @@ impl Board {
                 self.pieces[king_index + 1] = rook;
             }
 
-            if special_two {
+            if special_two && CastlingRights::can_long_castle(castling_rights) {
+                self.castling_rights = match active_colour {
+                    Color::White => {
+                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
+                    }
+                    Color::Black => {
+                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
+                    }
+                    _ => unreachable!(),
+                };
+
                 let king_index = king_rank * 8 + king_file;
                 let king = self.pieces[king_index];
                 let rook = self.pieces[king_index - 4];
