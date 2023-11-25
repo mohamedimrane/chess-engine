@@ -1,4 +1,4 @@
-use crate::colour::Color;
+use crate::colour::Colour;
 
 pub struct CastlingRights;
 
@@ -31,8 +31,8 @@ impl CastlingRights {
 
     pub fn rights(rights: u8, colour: bool) -> u8 {
         match colour {
-            Color::White => Self::white_rights(rights),
-            Color::Black => Self::black_rights(rights),
+            Colour::White => Self::white_rights(rights),
+            Colour::Black => Self::black_rights(rights),
             _ => unreachable!(),
         }
     }

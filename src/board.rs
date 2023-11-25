@@ -1,5 +1,5 @@
 use crate::{
-    castling_rights::CastlingRights, colour::Color, errors::FenError, moves::Move, piece::Piece,
+    castling_rights::CastlingRights, colour::Colour, errors::FenError, moves::Move, piece::Piece,
 };
 
 pub struct Board {
@@ -51,17 +51,17 @@ impl Board {
             }
 
             let (king_file, king_rank) = match active_colour {
-                Color::White => (4, 0),
-                Color::Black => (4, 7),
+                Colour::White => (4, 0),
+                Colour::Black => (4, 7),
                 _ => unreachable!(),
             };
 
             if special_one && CastlingRights::can_short_castle(castling_rights) {
                 self.castling_rights = match active_colour {
-                    Color::White => {
+                    Colour::White => {
                         self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
                     }
-                    Color::Black => {
+                    Colour::Black => {
                         self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
                     }
                     _ => unreachable!(),
@@ -78,10 +78,10 @@ impl Board {
 
             if special_two && CastlingRights::can_long_castle(castling_rights) {
                 self.castling_rights = match active_colour {
-                    Color::White => {
+                    Colour::White => {
                         self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
                     }
-                    Color::Black => {
+                    Colour::Black => {
                         self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
                     }
                     _ => unreachable!(),
@@ -138,8 +138,8 @@ impl Board {
         let mut board = Self::default();
 
         board.colour_to_move = match splited_fen[1].chars().next().unwrap() {
-            'w' => Color::White,
-            'b' => Color::Black,
+            'w' => Colour::White,
+            'b' => Colour::Black,
             _ => return Err(FenError::InvalidColor),
         };
 
@@ -255,7 +255,7 @@ impl Default for Board {
     fn default() -> Self {
         Self {
             pieces: [0; 64],
-            colour_to_move: Color::White,
+            colour_to_move: Colour::White,
             castling_rights: CastlingRights::WhiteCanCastle | CastlingRights::BlackCanCastle,
         }
     }

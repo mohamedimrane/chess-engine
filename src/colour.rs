@@ -1,7 +1,7 @@
 #[non_exhaustive]
-pub struct Color;
+pub struct Colour;
 
-impl Color {
+impl Colour {
     pub const White: bool = true;
     pub const Black: bool = false;
 }
