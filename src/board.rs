@@ -1,8 +1,10 @@
-use crate::{castling_rights::CastlingRights, errors::FenError, moves::Move, piece::Piece};
+use crate::{
+    castling_rights::CastlingRights, colour::Color, errors::FenError, moves::Move, piece::Piece,
+};
 
 pub struct Board {
     pieces: [u8; 64],
-    colour_to_move: u8,
+    colour_to_move: bool,
     castling_rights: u8,
 }
 
@@ -22,11 +24,7 @@ impl Board {
 
         let active_colour = self.colour_to_move;
 
-        self.colour_to_move = match self.colour_to_move {
-            Piece::White => Piece::Black,
-            Piece::Black => Piece::White,
-            _ => unreachable!(),
-        };
+        self.colour_to_move = !self.colour_to_move;
 
         if promotion {
             let promotion_type = Move::promotion_type(v_move);
@@ -47,8 +45,8 @@ impl Board {
 
         if castling {
             let (king_file, king_rank) = match active_colour {
-                Piece::White => (4, 0),
-                Piece::Black => (4, 7),
+                Color::White => (4, 0),
+                Color::Black => (4, 7),
                 _ => unreachable!(),
             };
 
@@ -114,8 +112,8 @@ impl Board {
         let mut board = Self::default();
 
         board.colour_to_move = match splited_fen[1].chars().next().unwrap() {
-            'w' => Piece::White,
-            'b' => Piece::Black,
+            'w' => Color::White,
+            'b' => Color::Black,
             _ => return Err(FenError::InvalidColor),
         };
 
@@ -231,7 +229,7 @@ impl Default for Board {
     fn default() -> Self {
         Self {
             pieces: [0; 64],
-            colour_to_move: Piece::White,
+            colour_to_move: Color::White,
             castling_rights: CastlingRights::WhiteCanCastle | CastlingRights::BlackCanCastle,
         }
     }
