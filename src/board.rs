@@ -20,6 +20,14 @@ impl Board {
         let departure_square = (departure_rank * 8 + departure_file) as usize;
         let target_square = (target_rank * 8 + target_file) as usize;
 
+        let active_colour = self.colour_to_move;
+
+        self.colour_to_move = match self.colour_to_move {
+            Piece::White => Piece::Black,
+            Piece::Black => Piece::White,
+            _ => unreachable!(),
+        };
+
         if promotion {
             let promotion_type = Move::promotion_type(v_move);
             let piece_to_promote_to = match promotion_type {
@@ -38,7 +46,33 @@ impl Board {
         }
 
         if castling {
-            todo!()
+            let (king_file, king_rank) = match active_colour {
+                Piece::White => (4, 0),
+                Piece::Black => (4, 7),
+                _ => unreachable!(),
+            };
+
+            if special_one {
+                let king_index = king_rank * 8 + king_file;
+                let king = self.pieces[king_index];
+                let rook = self.pieces[king_index + 3];
+                self.pieces[king_index] = Piece::None;
+                self.pieces[king_index + 3] = Piece::None;
+                self.pieces[king_index + 2] = king;
+                self.pieces[king_index + 1] = rook;
+            }
+
+            if special_two {
+                let king_index = king_rank * 8 + king_file;
+                let king = self.pieces[king_index];
+                let rook = self.pieces[king_index - 4];
+                self.pieces[king_index] = Piece::None;
+                self.pieces[king_index - 4] = Piece::None;
+                self.pieces[king_index - 2] = king;
+                self.pieces[king_index - 1] = rook;
+            }
+
+            return;
         }
 
         self.pieces[target_square] = self.pieces[departure_square];

@@ -13,14 +13,20 @@ fn main() {
 
     println!("{}", board.stringify(Piece::White));
 
-    let v_move = Move::new_move(1, 0, 2, 2);
-    board.make_move(v_move);
-    let v_move = Move::new_move(3, 1, 3, 2);
-    board.make_move(v_move);
-    let v_move = Move::new_move(2, 0, 5, 3);
+    // let v_move = Move::new_move(1, 0, 2, 2);
+    // board.make_move(v_move);
+    // let v_move = Move::new_move(3, 1, 3, 2);
+    // board.make_move(v_move);
+    // let v_move = Move::new_move(2, 0, 5, 3);
+    // board.make_move(v_move);
+
+    // let v_move = Move::new_move(0, 0, 4, 7) | Move::PromoteToQueen | Move::Capture;
+    // board.make_move(v_move);
+
+    let v_move = Move::LongCastle;
     board.make_move(v_move);
 
-    let v_move = Move::new_move(0, 0, 4, 7) | Move::PromoteToQueen | Move::Capture;
+    let v_move = Move::ShortCastle;
     board.make_move(v_move);
 
     println!("{}", board.stringify(Piece::White));
