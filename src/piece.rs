@@ -1,3 +1,5 @@
+use crate::colour::Colour;
+
 #[non_exhaustive]
 /// A piece is represented by 6 bits
 ///        `00`->color `0000`->kind
@@ -24,6 +26,22 @@ impl Piece {
 
     pub fn colour(piece: u8) -> u8 {
         piece & Self::colourMask
+    }
+
+    pub fn colour_bool(piece: u8) -> bool {
+        let colour = piece & Self::colourMask;
+        match colour {
+            Self::White => Colour::White,
+            Self::Black => Colour::Black,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn is_sliding_piece(piece: u8) -> bool {
+        matches!(
+            Self::pieceType(piece),
+            Piece::Queen | Piece::Rook | Piece::Bishop
+        )
     }
 
     pub fn pieceType(piece: u8) -> u8 {

@@ -1,11 +1,16 @@
+use std::cmp::{max, min};
+
 use crate::{
     castling_rights::CastlingRights, colour::Colour, errors::FenError, moves::Move, piece::Piece,
 };
+
+const DIRECTION_OFFSETS: [i8; 8] = [8, -8, -1, 1, 7, -7, 9, -9];
 
 pub struct Board {
     pieces: [u8; 64],
     colour_to_move: bool,
     castling_rights: u8,
+    num_squares_to_edge: [[u8; 8]; 64],
 }
 
 impl Board {
@@ -101,6 +106,55 @@ impl Board {
 
         self.pieces[target_square] = self.pieces[departure_square];
         self.pieces[departure_square] = Piece::None;
+    }
+
+    pub fn generate_moves(&self) -> Vec<u16> {
+        let mut moves = Vec::new();
+
+        for (start_square, piece) in self.pieces.iter().enumerate() {
+            let piece = *piece;
+
+            let piece_color = Piece::colour_bool(piece);
+            if piece_color != self.colour_to_move {
+                continue;
+            }
+
+            let piece_type = Piece::pieceType(piece);
+
+            if Piece::is_sliding_piece(piece) {
+                let (dir_start, dir_end) = match piece_type {
+                    Piece::Queen => (0, 7),
+                    Piece::Rook => (0, 3),
+                    Piece::Bishop => (4, 7),
+                    _ => unreachable!(),
+                };
+
+                for dir_index in 0..8 {
+                    for n in 0..self.num_squares_to_edge[start_square][dir_index] {
+                        let target_square =
+                            start_square as i8 + DIRECTION_OFFSETS[dir_index] * (n as i8 + 1);
+                        if target_square < 0 {
+                            continue;
+                        }
+                        let piece_on_target_square = self.pieces[target_square as usize];
+
+                        let friendly_color = match self.colour_to_move {
+                            Colour::White => Piece::White,
+                            Colour::Black => Piece::Black,
+                        };
+
+                        if Piece::isColour(piece_on_target_square, friendly_color) {
+                            let m_move = 0;
+                            moves.push(m_move);
+                        }
+                    }
+                }
+
+                continue;
+            }
+        }
+
+        moves
     }
 
     pub fn new() -> Self {
@@ -257,6 +311,35 @@ impl Default for Board {
             pieces: [0; 64],
             colour_to_move: Colour::White,
             castling_rights: CastlingRights::WhiteCanCastle | CastlingRights::BlackCanCastle,
+            num_squares_to_edge: generate_num_squares_to_edge(),
         }
     }
+}
+
+fn generate_num_squares_to_edge() -> [[u8; 8]; 64] {
+    let mut res = [[0_u8; 8]; 64];
+
+    for file in 0..8 {
+        for rank in 0..8 {
+            let num_north = 7 - rank;
+            let num_south = rank;
+            let num_west = file;
+            let num_east = 7 - file;
+
+            let square_index = 8 * rank + file;
+
+            res[square_index] = [
+                num_north as u8,
+                num_south as u8,
+                num_west as u8,
+                num_east as u8,
+                min(num_north, num_west) as u8,
+                min(num_south, num_east) as u8,
+                max(num_north, num_east) as u8,
+                max(num_south, num_west) as u8,
+            ];
+        }
+    }
+
+    res
 }
