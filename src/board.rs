@@ -133,8 +133,8 @@ impl Board {
         board
     }
 
-    fn from_fen(fen: &str) -> Result<Self, FenError> {
-        let splited_fen: Vec<&str> = fen.split('/').collect();
+    pub fn from_fen(fen: &str) -> Result<Self, FenError> {
+        let splited_fen: Vec<&str> = fen.split(' ').collect();
         let mut board = Self::default();
 
         board.colour_to_move = match splited_fen[1].chars().next().unwrap() {
