@@ -39,16 +39,16 @@ impl Piece {
 
     pub fn is_sliding_piece(piece: u8) -> bool {
         matches!(
-            Self::pieceType(piece),
+            Self::piece_type(piece),
             Piece::Queen | Piece::Rook | Piece::Bishop
         )
     }
 
-    pub fn pieceType(piece: u8) -> u8 {
+    pub fn piece_type(piece: u8) -> u8 {
         piece & Self::typeMask
     }
 
-    pub fn isColour(piece: u8, colour: u8) -> bool {
+    pub fn is_colour(piece: u8, colour: u8) -> bool {
         piece & Self::colourMask == colour
     }
 }

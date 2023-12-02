@@ -44,27 +44,27 @@ impl Move {
     }
 
     pub fn departure_file(v_move: u16) -> u8 {
-        (v_move & Move::departure_file_mask) as u8
+        (v_move & Self::departure_file_mask) as u8
     }
 
     pub fn departure_rank(v_move: u16) -> u8 {
-        ((v_move & Move::departure_rank_mask) >> 3) as u8
+        ((v_move & Self::departure_rank_mask) >> 3) as u8
     }
 
     pub fn target_file(v_move: u16) -> u8 {
-        ((v_move & Move::target_file_mask) >> 6) as u8
+        ((v_move & Self::target_file_mask) >> 6) as u8
     }
 
     pub fn target_rank(v_move: u16) -> u8 {
-        ((v_move & Move::target_rank_mask) >> 9) as u8
+        ((v_move & Self::target_rank_mask) >> 9) as u8
     }
 
     pub fn capture(v_move: u16) -> bool {
-        (v_move & Move::capture_mask) == Self::Capture
+        (v_move & Self::capture_mask) == Self::Capture
     }
 
     pub fn is_promotion(v_move: u16) -> bool {
-        (v_move & Move::promotion_mask) == Self::promotion_mask
+        (v_move & Self::promotion_mask) == Self::promotion_mask
     }
 
     pub fn promotion_type(v_move: u16) -> u16 {
@@ -72,15 +72,15 @@ impl Move {
     }
 
     pub fn is_castling(v_move: u16) -> bool {
-        (v_move & Move::castling_mask) == Self::ShortCastle
-            || (v_move & Move::castling_mask) == Self::LongCastle && !Self::is_promotion(v_move)
+        (v_move & Self::castling_mask) == Self::ShortCastle
+            || (v_move & Self::castling_mask) == Self::LongCastle && !Self::is_promotion(v_move)
     }
 
     pub fn special_one(v_move: u16) -> bool {
-        (v_move & Move::special_one_mask) == Self::special_one_mask
+        (v_move & Self::special_one_mask) == Self::special_one_mask
     }
 
     pub fn special_two(v_move: u16) -> bool {
-        (v_move & Move::special_two_mask) == Self::special_two_mask
+        (v_move & Self::special_two_mask) == Self::special_two_mask
     }
 }

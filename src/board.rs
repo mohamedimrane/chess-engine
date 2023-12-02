@@ -119,7 +119,7 @@ impl Board {
                 continue;
             }
 
-            let piece_type = Piece::pieceType(piece);
+            let piece_type = Piece::piece_type(piece);
 
             if Piece::is_sliding_piece(piece) {
                 let (dir_start, dir_end) = match piece_type {
@@ -143,7 +143,7 @@ impl Board {
                             Colour::Black => Piece::Black,
                         };
 
-                        if Piece::isColour(piece_on_target_square, friendly_color) {
+                        if Piece::is_colour(piece_on_target_square, friendly_color) {
                             let m_move = 0;
                             moves.push(m_move);
                         }
@@ -277,7 +277,7 @@ impl Board {
 
                 let piece = self.pieces[perspective.0 * 8 + perspective.1];
                 let piece_color = Piece::colour(piece);
-                let piece_type = Piece::pieceType(piece);
+                let piece_type = Piece::piece_type(piece);
 
                 let mut piece_repr = match piece_type {
                     Piece::None => ' ',
