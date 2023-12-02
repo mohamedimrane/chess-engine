@@ -30,7 +30,7 @@ impl Move {
     pub const special_one_mask: u16 = 0b0100000000000000;
     pub const special_two_mask: u16 = 0b1000000000000000;
 
-    pub fn new_move(departure_square: u16, target_square: u16) -> u16 {
+    pub fn new(departure_square: u16, target_square: u16) -> u16 {
         departure_square | target_square << 6
     }
 
@@ -39,7 +39,7 @@ impl Move {
     }
 
     pub fn target_square(v_move: u16) -> u8 {
-        (v_move & Self::target_square_mask) as u8
+        ((v_move & Self::target_square_mask) >> 6) as u8
     }
 
     // pub fn departure_file(v_move: u16) -> u8 {

@@ -10,7 +10,10 @@ mod piece;
 fn main() {
     println!("Hello, world!");
 
-    let mut board = Board::new();
+    let mut board = Board::from_fen("8/8/8/2BRR/8/8/8/8 w QKqk").unwrap();
+
+    let moves = board.generate_moves();
+    println!("{:?} => {}", moves, moves.len());
 
     println!("{}", board.stringify(Piece::White));
 

@@ -109,8 +109,16 @@ impl Board {
         for (start_square, piece) in self.pieces.iter().enumerate() {
             let piece = *piece;
 
+            if piece == Piece::None {
+                continue;
+            }
+
             let piece_color = Piece::colour_bool(piece);
+            println!("{}", piece_color);
+            println!("{}", self.colour_to_move);
+
             if piece_color != self.colour_to_move {
+                println!("ddd");
                 continue;
             }
 
@@ -118,24 +126,33 @@ impl Board {
 
             if Piece::is_sliding_piece(piece) {
                 let (dir_start, dir_end) = match piece_type {
-                    Piece::Queen => (0, 7),
-                    Piece::Rook => (0, 3),
-                    Piece::Bishop => (4, 7),
+                    Piece::Queen => (0, 8),
+                    Piece::Rook => (0, 4),
+                    Piece::Bishop => (4, 8),
                     _ => unreachable!(),
                 };
 
-                for dir_index in 0..8 {
+                for dir_index in dir_start..dir_end {
                     for n in 0..self.num_squares_to_edge[start_square][dir_index] {
                         let target_square =
                             start_square as i8 + DIRECTION_OFFSETS[dir_index] * (n as i8 + 1);
-                        if target_square < 0 {
+
+                        if !(0..=63).contains(&target_square) {
                             continue;
                         }
+                        println!("{}", target_square);
+
                         let piece_on_target_square = self.pieces[target_square as usize];
 
                         if Piece::is_colour_bool(piece_on_target_square, self.colour_to_move) {
-                            let m_move = 0;
-                            moves.push(m_move);
+                            break;
+                        }
+
+                        let m_move = Move::new(start_square as u16, target_square as u16);
+                        moves.push(m_move);
+
+                        if Piece::is_colour_bool(piece_on_target_square, !self.colour_to_move) {
+                            break;
                         }
                     }
                 }
@@ -181,9 +198,9 @@ impl Board {
         let splited_fen: Vec<&str> = fen.split(' ').collect();
         let mut board = Self::default();
 
-        board.colour_to_move = match splited_fen[1].chars().next().unwrap() {
-            'w' => Colour::White,
-            'b' => Colour::Black,
+        board.colour_to_move = match splited_fen[1] {
+            "w" => Colour::White,
+            "b" => Colour::Black,
             _ => return Err(FenError::InvalidColor),
         };
 
@@ -325,8 +342,8 @@ fn generate_num_squares_to_edge() -> [[u8; 8]; 64] {
                 num_east as u8,
                 min(num_north, num_west) as u8,
                 min(num_south, num_east) as u8,
-                max(num_north, num_east) as u8,
-                max(num_south, num_west) as u8,
+                min(num_north, num_east) as u8,
+                min(num_south, num_west) as u8,
             ];
         }
     }
