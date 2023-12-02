@@ -4,10 +4,8 @@ pub struct Move;
 /// 00->special moves (castling or promotion type)
 /// 0->promotion
 /// 0->capture
-/// 000->target rank
-/// 000->target file
-/// 000->departure rank
-/// 000->departure file
+/// 000000->target square
+/// 000000->departure square
 
 impl Move {
     pub const PromoteToKnight: u16 = 0b0010000000000000;
@@ -20,10 +18,8 @@ impl Move {
 
     pub const Capture: u16 = 0b0001000000000000;
 
-    pub const departure_file_mask: u16 = 0b0000000000000111;
-    pub const departure_rank_mask: u16 = 0b0000000000111000;
-    pub const target_file_mask: u16 = 0b0000000111000000;
-    pub const target_rank_mask: u16 = 0b0000111000000000;
+    pub const departure_square_mask: u16 = 0b0000000000111111;
+    pub const target_square_mask: u16 = 0b0000111111000000;
 
     pub const capture_mask: u16 = 0b0001000000000000;
 
@@ -34,30 +30,33 @@ impl Move {
     pub const special_one_mask: u16 = 0b0100000000000000;
     pub const special_two_mask: u16 = 0b1000000000000000;
 
-    pub fn new_move(
-        departure_file: u16,
-        departure_rank: u16,
-        target_file: u16,
-        target_rank: u16,
-    ) -> u16 {
-        departure_file | departure_rank << 3 | target_file << 6 | target_rank << 9
+    pub fn new_move(departure_square: u16, target_square: u16) -> u16 {
+        departure_square | target_square << 6
     }
 
-    pub fn departure_file(v_move: u16) -> u8 {
-        (v_move & Self::departure_file_mask) as u8
+    pub fn departure_square(v_move: u16) -> u8 {
+        (v_move & Self::departure_square_mask) as u8
     }
 
-    pub fn departure_rank(v_move: u16) -> u8 {
-        ((v_move & Self::departure_rank_mask) >> 3) as u8
+    pub fn target_square(v_move: u16) -> u8 {
+        (v_move & Self::target_square_mask) as u8
     }
 
-    pub fn target_file(v_move: u16) -> u8 {
-        ((v_move & Self::target_file_mask) >> 6) as u8
-    }
+    // pub fn departure_file(v_move: u16) -> u8 {
+    //     (v_move & Self::departure_file_mask) as u8
+    // }
 
-    pub fn target_rank(v_move: u16) -> u8 {
-        ((v_move & Self::target_rank_mask) >> 9) as u8
-    }
+    // pub fn departure_rank(v_move: u16) -> u8 {
+    //     ((v_move & Self::departure_rank_mask) >> 3) as u8
+    // }
+
+    // pub fn target_file(v_move: u16) -> u8 {
+    //     ((v_move & Self::target_file_mask) >> 6) as u8
+    // }
+
+    // pub fn target_rank(v_move: u16) -> u8 {
+    //     ((v_move & Self::target_rank_mask) >> 9) as u8
+    // }
 
     pub fn capture(v_move: u16) -> bool {
         (v_move & Self::capture_mask) == Self::Capture

@@ -15,17 +15,12 @@ pub struct Board {
 
 impl Board {
     pub fn make_move(&mut self, v_move: u16) {
-        let departure_file = Move::departure_file(v_move);
-        let departure_rank = Move::departure_rank(v_move);
-        let target_file = Move::target_file(v_move);
-        let target_rank = Move::target_rank(v_move);
+        let departure_square = Move::departure_square(v_move) as usize;
+        let target_square = Move::target_square(v_move) as usize;
         let promotion = Move::is_promotion(v_move);
         let castling = Move::is_castling(v_move);
         let special_one = Move::special_one(v_move);
         let special_two = Move::special_two(v_move);
-
-        let departure_square = (departure_rank * 8 + departure_file) as usize;
-        let target_square = (target_rank * 8 + target_file) as usize;
 
         let active_colour = self.colour_to_move;
 
