@@ -138,12 +138,7 @@ impl Board {
                         }
                         let piece_on_target_square = self.pieces[target_square as usize];
 
-                        let friendly_color = match self.colour_to_move {
-                            Colour::White => Piece::White,
-                            Colour::Black => Piece::Black,
-                        };
-
-                        if Piece::is_colour(piece_on_target_square, friendly_color) {
+                        if Piece::is_colour_bool(piece_on_target_square, self.colour_to_move) {
                             let m_move = 0;
                             moves.push(m_move);
                         }
