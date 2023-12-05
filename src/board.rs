@@ -1,8 +1,39 @@
-use std::cmp::{max, min};
+use lazy_static::lazy_static;
+use std::cmp::min;
 
 use crate::{
     castling_rights::CastlingRights, colour::Colour, errors::FenError, moves::Move, piece::Piece,
 };
+
+lazy_static! {
+    static ref NUM_SQUARES_TO_EDGE: [[u8; 8]; 64] = {
+        let mut res = [[0_u8; 8]; 64];
+
+        for file in 0..8 {
+            for rank in 0..8 {
+                let num_north = 7 - rank;
+                let num_south = rank;
+                let num_west = file;
+                let num_east = 7 - file;
+
+                let square_index = 8 * rank + file;
+
+                res[square_index] = [
+                    num_north as u8,
+                    num_south as u8,
+                    num_west as u8,
+                    num_east as u8,
+                    min(num_north, num_west) as u8,
+                    min(num_south, num_east) as u8,
+                    min(num_north, num_east) as u8,
+                    min(num_south, num_west) as u8,
+                ];
+            }
+        }
+
+        res
+    };
+}
 
 const DIRECTION_OFFSETS: [i8; 8] = [8, -8, -1, 1, 7, -7, 9, -9];
 const KNIGHTS_OFFSETS: [(i8, i8); 8] = [
@@ -20,7 +51,6 @@ pub struct Board {
     pieces: [u8; 64],
     colour_to_move: bool,
     castling_rights: u8,
-    num_squares_to_edge: [[u8; 8]; 64],
 }
 
 impl Board {
@@ -140,7 +170,7 @@ impl Board {
                 };
 
                 for dir_index in dir_start..dir_end {
-                    for n in 0..self.num_squares_to_edge[start_square][dir_index] {
+                    for n in 0..NUM_SQUARES_TO_EDGE[start_square][dir_index] {
                         let target_square =
                             start_square as i8 + DIRECTION_OFFSETS[dir_index] * (n as i8 + 1);
 
@@ -354,37 +384,8 @@ impl Default for Board {
             pieces: [0; 64],
             colour_to_move: Colour::White,
             castling_rights: CastlingRights::WhiteCanCastle | CastlingRights::BlackCanCastle,
-            num_squares_to_edge: generate_num_squares_to_edge(),
         }
     }
-}
-
-fn generate_num_squares_to_edge() -> [[u8; 8]; 64] {
-    let mut res = [[0_u8; 8]; 64];
-
-    for file in 0..8 {
-        for rank in 0..8 {
-            let num_north = 7 - rank;
-            let num_south = rank;
-            let num_west = file;
-            let num_east = 7 - file;
-
-            let square_index = 8 * rank + file;
-
-            res[square_index] = [
-                num_north as u8,
-                num_south as u8,
-                num_west as u8,
-                num_east as u8,
-                min(num_north, num_west) as u8,
-                min(num_south, num_east) as u8,
-                min(num_north, num_east) as u8,
-                min(num_south, num_west) as u8,
-            ];
-        }
-    }
-
-    res
 }
 
 fn square_to_coods(square: u16) -> (u16, u16) {

@@ -10,7 +10,7 @@ mod piece;
 fn main() {
     println!("Hello, world!");
 
-    let mut board = Board::from_fen("8/8/5N2/3N4/8/8/8/7N w QKqk").unwrap();
+    let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/8/8/7N w QKqk").unwrap();
     // let mut board = Board::from_fen("N7/8/8/8/8/8/8/8 w QKqk").unwrap();
 
     let moves = board.generate_moves();
