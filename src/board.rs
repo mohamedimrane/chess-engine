@@ -5,6 +5,16 @@ use crate::{
 };
 
 const DIRECTION_OFFSETS: [i8; 8] = [8, -8, -1, 1, 7, -7, 9, -9];
+const KNIGHTS_OFFSETS: [(i8, i8); 8] = [
+    (2, 1),
+    (2, -1),
+    (1, 2),
+    (-1, 2),
+    (-2, 1),
+    (-2, -1),
+    (1, -2),
+    (-1, -2),
+];
 
 pub struct Board {
     pieces: [u8; 64],
@@ -114,11 +124,8 @@ impl Board {
             }
 
             let piece_color = Piece::colour_bool(piece);
-            println!("{}", piece_color);
-            println!("{}", self.colour_to_move);
 
             if piece_color != self.colour_to_move {
-                println!("ddd");
                 continue;
             }
 
@@ -140,7 +147,6 @@ impl Board {
                         if !(0..=63).contains(&target_square) {
                             continue;
                         }
-                        println!("{}", target_square);
 
                         let piece_on_target_square = self.pieces[target_square as usize];
 
@@ -155,6 +161,36 @@ impl Board {
                             break;
                         }
                     }
+                }
+
+                continue;
+            }
+
+            if Piece::is_type(piece_type, Piece::Knight) {
+                for n in KNIGHTS_OFFSETS {
+                    let (start_file, start_rank) = square_to_coods(start_square as u16);
+                    let target_file = start_file as i8 + n.0;
+                    let target_rank = start_rank as i8 + n.1;
+
+                    if !(0..=7).contains(&target_file) || !(0..=7).contains(&target_rank) {
+                        continue;
+                    }
+
+                    let target_square = target_rank * 8 + target_file;
+
+                    if !(0..=63).contains(&target_square) {
+                        continue;
+                    }
+
+                    let piece_on_target_square = self.pieces[target_square as usize];
+
+                    if Piece::is_colour_bool(piece_on_target_square, self.colour_to_move) {
+                        continue;
+                    }
+
+                    let v_move = Move::new(start_square as u16, target_square as u16);
+
+                    moves.push(v_move);
                 }
 
                 continue;
@@ -349,4 +385,11 @@ fn generate_num_squares_to_edge() -> [[u8; 8]; 64] {
     }
 
     res
+}
+
+fn square_to_coods(square: u16) -> (u16, u16) {
+    let rank = (square as f32 / 8.).floor();
+    let file = square as f32 - rank * 8.;
+
+    (file as u16, rank as u16)
 }

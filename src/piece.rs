@@ -52,6 +52,10 @@ impl Piece {
         piece & Self::colourMask == colour
     }
 
+    pub fn is_type(piece: u8, v_type: u8) -> bool {
+        piece & Self::typeMask == v_type
+    }
+
     pub fn is_colour_bool(piece: u8, colour: bool) -> bool {
         let colour = match colour {
             Colour::White => Piece::White,

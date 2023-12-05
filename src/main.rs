@@ -1,4 +1,4 @@
-use crate::{board::Board, moves::Move, piece::Piece};
+use crate::{board::Board, piece::Piece};
 
 mod board;
 mod castling_rights;
@@ -10,10 +10,15 @@ mod piece;
 fn main() {
     println!("Hello, world!");
 
-    let mut board = Board::from_fen("8/8/8/2BRR/8/8/8/8 w QKqk").unwrap();
+    let mut board = Board::from_fen("8/8/5N2/3N4/8/8/8/7N w QKqk").unwrap();
+    // let mut board = Board::from_fen("N7/8/8/8/8/8/8/8 w QKqk").unwrap();
 
     let moves = board.generate_moves();
-    println!("{:?} => {}", moves, moves.len());
+    // println!("{:?} => {}", moves, moves.len());
+    for v_move in moves.iter() {
+        println!("{}", repr_move(*v_move));
+    }
+    println!("move count: {}", moves.len());
 
     println!("{}", board.stringify(Piece::White));
 
@@ -35,4 +40,30 @@ fn main() {
 
     // println!("{}", board.stringify(Piece::White));
     // println!("{}", v_move);
+}
+
+fn repr_move(v_move: u16) -> String {
+    let departure_square = v_move & 0b111111;
+    let target_square = (v_move & 0b111111000000) >> 6;
+    let (departure_file, departure_rank) = square_to_coods(departure_square);
+    let (target_file, target_rank) = square_to_coods(target_square);
+    format!(
+        "{}{} to {}{}",
+        get_file_letter(departure_file),
+        departure_rank + 1,
+        get_file_letter(target_file),
+        target_rank + 1
+    )
+}
+
+fn square_to_coods(square: u16) -> (u16, u16) {
+    let rank = (square as f32 / 8.).floor();
+    let file = square as f32 - rank * 8.;
+
+    (file as u16, rank as u16)
+}
+
+const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+fn get_file_letter(file: u16) -> char {
+    FILE_LETTERS[file as usize]
 }
