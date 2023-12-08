@@ -93,7 +93,6 @@ impl Board {
             let (king_file, king_rank) = match active_colour {
                 Colour::White => (4, 0),
                 Colour::Black => (4, 7),
-                _ => unreachable!(),
             };
 
             if special_one && CastlingRights::can_short_castle(castling_rights) {
@@ -104,7 +103,6 @@ impl Board {
                     Colour::Black => {
                         self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
                     }
-                    _ => unreachable!(),
                 };
 
                 let king_index = king_rank * 8 + king_file;
@@ -124,7 +122,6 @@ impl Board {
                     Colour::Black => {
                         self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
                     }
-                    _ => unreachable!(),
                 };
 
                 let king_index = king_rank * 8 + king_file;
@@ -169,6 +166,7 @@ impl Board {
                     _ => unreachable!(),
                 };
 
+                #[allow(clippy::needless_range_loop)]
                 for dir_index in dir_start..dir_end {
                     for n in 0..NUM_SQUARES_TO_EDGE[start_square][dir_index] {
                         let target_square =
@@ -230,6 +228,7 @@ impl Board {
         moves
     }
 
+    #[allow(dead_code)]
     pub fn new() -> Self {
         let mut board = Self::default();
 

@@ -5,6 +5,7 @@ use crate::colour::Colour;
 ///        `00`->color `0000`->kind
 pub struct Piece;
 
+#[allow(non_upper_case_globals, dead_code)]
 impl Piece {
     pub const None: u8 = 0;
 
@@ -18,18 +19,18 @@ impl Piece {
     pub const White: u8 = 0b00010000; // 1000 => 16
     pub const Black: u8 = 0b00100000; // 10000 => 32
 
-    const typeMask: u8 = 0b00001111;
+    const TYPE_MASK: u8 = 0b00001111;
 
-    const whiteMask: u8 = 0b00010000;
-    const blackMask: u8 = 0b00100000;
-    const colourMask: u8 = Self::whiteMask | Self::blackMask;
+    const WHITE_MASK: u8 = 0b00010000;
+    const BLACK_MASK: u8 = 0b00100000;
+    const COLOUR_MASK: u8 = Self::WHITE_MASK | Self::BLACK_MASK;
 
     pub fn colour(piece: u8) -> u8 {
-        piece & Self::colourMask
+        piece & Self::COLOUR_MASK
     }
 
     pub fn colour_bool(piece: u8) -> bool {
-        let colour = piece & Self::colourMask;
+        let colour = piece & Self::COLOUR_MASK;
         match colour {
             Self::White => Colour::White,
             Self::Black => Colour::Black,
@@ -45,15 +46,15 @@ impl Piece {
     }
 
     pub fn piece_type(piece: u8) -> u8 {
-        piece & Self::typeMask
+        piece & Self::TYPE_MASK
     }
 
     pub fn is_colour(piece: u8, colour: u8) -> bool {
-        piece & Self::colourMask == colour
+        piece & Self::COLOUR_MASK == colour
     }
 
     pub fn is_type(piece: u8, v_type: u8) -> bool {
-        piece & Self::typeMask == v_type
+        piece & Self::TYPE_MASK == v_type
     }
 
     pub fn is_colour_bool(piece: u8, colour: bool) -> bool {
@@ -62,6 +63,6 @@ impl Piece {
             Colour::Black => Piece::Black,
         };
 
-        piece & Self::colourMask == colour
+        piece & Self::COLOUR_MASK == colour
     }
 }

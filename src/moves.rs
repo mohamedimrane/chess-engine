@@ -7,6 +7,7 @@ pub struct Move;
 /// 000000->target square
 /// 000000->departure square
 
+#[allow(non_upper_case_globals, dead_code)]
 impl Move {
     pub const PromoteToKnight: u16 = 0b0010000000000000;
     pub const PromoteToBishop: u16 = 0b0110000000000000;
@@ -18,28 +19,29 @@ impl Move {
 
     pub const Capture: u16 = 0b0001000000000000;
 
-    pub const departure_square_mask: u16 = 0b0000000000111111;
-    pub const target_square_mask: u16 = 0b0000111111000000;
+    pub const DEPARTURE_SQUARE_MASK: u16 = 0b0000000000111111;
+    pub const TARGET_SQUARE_MASK: u16 = 0b0000111111000000;
 
-    pub const capture_mask: u16 = 0b0001000000000000;
+    pub const CAPTURE_MASK: u16 = 0b0001000000000000;
 
-    pub const promotion_mask: u16 = 0b0010000000000000;
+    pub const PROMOTION_MASK: u16 = 0b0010000000000000;
 
-    pub const castling_mask: u16 = 0b1100000000000000;
+    pub const CASTLING_MASK: u16 = 0b1100000000000000;
 
-    pub const special_one_mask: u16 = 0b0100000000000000;
-    pub const special_two_mask: u16 = 0b1000000000000000;
+    pub const SPECIAL_ONE_MASK: u16 = 0b0100000000000000;
+    pub const SPECIAL_TWO_MASK: u16 = 0b1000000000000000;
 
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(departure_square: u16, target_square: u16) -> u16 {
         departure_square | target_square << 6
     }
 
     pub fn departure_square(v_move: u16) -> u8 {
-        (v_move & Self::departure_square_mask) as u8
+        (v_move & Self::DEPARTURE_SQUARE_MASK) as u8
     }
 
     pub fn target_square(v_move: u16) -> u8 {
-        ((v_move & Self::target_square_mask) >> 6) as u8
+        ((v_move & Self::TARGET_SQUARE_MASK) >> 6) as u8
     }
 
     // pub fn departure_file(v_move: u16) -> u8 {
@@ -59,11 +61,11 @@ impl Move {
     // }
 
     pub fn capture(v_move: u16) -> bool {
-        (v_move & Self::capture_mask) == Self::Capture
+        (v_move & Self::CAPTURE_MASK) == Self::Capture
     }
 
     pub fn is_promotion(v_move: u16) -> bool {
-        (v_move & Self::promotion_mask) == Self::promotion_mask
+        (v_move & Self::PROMOTION_MASK) == Self::PROMOTION_MASK
     }
 
     pub fn promotion_type(v_move: u16) -> u16 {
@@ -71,15 +73,15 @@ impl Move {
     }
 
     pub fn is_castling(v_move: u16) -> bool {
-        (v_move & Self::castling_mask) == Self::ShortCastle
-            || (v_move & Self::castling_mask) == Self::LongCastle && !Self::is_promotion(v_move)
+        (v_move & Self::CASTLING_MASK) == Self::ShortCastle
+            || (v_move & Self::CASTLING_MASK) == Self::LongCastle && !Self::is_promotion(v_move)
     }
 
     pub fn special_one(v_move: u16) -> bool {
-        (v_move & Self::special_one_mask) == Self::special_one_mask
+        (v_move & Self::SPECIAL_ONE_MASK) == Self::SPECIAL_ONE_MASK
     }
 
     pub fn special_two(v_move: u16) -> bool {
-        (v_move & Self::special_two_mask) == Self::special_two_mask
+        (v_move & Self::SPECIAL_TWO_MASK) == Self::SPECIAL_TWO_MASK
     }
 }
