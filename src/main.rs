@@ -1,3 +1,7 @@
+use std::io::BufRead;
+
+use moves::Move;
+
 use crate::{board::Board, piece::Piece};
 
 mod board;
@@ -11,35 +15,52 @@ fn main() {
     println!("Hello, world!");
 
     let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/8/8/7N w QKqk").unwrap();
-    // let mut board = Board::from_fen("N7/8/8/8/8/8/8/8 w QKqk").unwrap();
 
-    let moves = board.generate_moves();
-    // println!("{:?} => {}", moves, moves.len());
-    for v_move in moves.iter() {
-        println!("{}", repr_move(*v_move));
-    }
-    println!("move count: {}", moves.len());
+    // board.make_move(Move::new(7, 13));
 
     println!("{}", board.stringify(Piece::White));
 
-    // let v_move = Move::new_move(1, 0, 2, 2);
-    // board.make_move(v_move);
-    // let v_move = Move::new_move(3, 1, 3, 2);
-    // board.make_move(v_move);
-    // let v_move = Move::new_move(2, 0, 5, 3);
-    // board.make_move(v_move);
+    let moves = board.generate_moves();
+    println!("move count: {}", moves.len());
 
-    // let v_move = Move::new_move(0, 0, 4, 7) | Move::PromoteToQueen | Move::Capture;
-    // board.make_move(v_move);
+    for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
+        print!("\n\n\n");
 
-    // let v_move = Move::ShortCastle;
-    // board.make_move(v_move);
+        let moves = board.generate_moves();
+        println!("move count: {}", moves.len());
 
-    // let v_move = Move::ShortCastle;
-    // board.make_move(v_move);
+        let v_move = process_move(line);
 
-    // println!("{}", board.stringify(Piece::White));
-    // println!("{}", v_move);
+        if !moves.contains(&v_move) {
+            println!("Invalid move");
+            continue;
+        }
+
+        board.make_move(v_move);
+
+        println!("{}", board.stringify(Piece::White));
+    }
+}
+
+fn process_move(string: String) -> u16 {
+    let chars: Vec<char> = string.chars().collect();
+
+    let (departure_file, departure_rank, target_file, target_rank) =
+        (chars[0], chars[1], chars[2], chars[3]);
+
+    let (departure_file, departure_rank, target_file, target_rank) = (
+        get_file_number(departure_file),
+        departure_rank.to_digit(10).unwrap() as u16 - 1,
+        get_file_number(target_file),
+        target_rank.to_digit(10).unwrap() as u16 - 1,
+    );
+
+    let departure_square = departure_rank * 8 + departure_file;
+    let target_square = target_rank * 8 + target_file;
+
+    let v_move = departure_square | target_square << 6;
+
+    v_move
 }
 
 fn repr_move(v_move: u16) -> String {
@@ -66,4 +87,8 @@ fn square_to_coods(square: u16) -> (u16, u16) {
 const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 fn get_file_letter(file: u16) -> char {
     FILE_LETTERS[file as usize]
+}
+
+fn get_file_number(file: char) -> u16 {
+    FILE_LETTERS.iter().position(|&a| a == file).unwrap() as u16
 }
