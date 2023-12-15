@@ -223,6 +223,30 @@ impl Board {
 
                 continue;
             }
+
+            if Piece::is_type(piece_type, Piece::King) {
+                #[allow(clippy::needless_range_loop)]
+                for dir_index in 0..8 {
+                    if NUM_SQUARES_TO_EDGE[start_square][dir_index] == 0 {
+                        continue;
+                    }
+
+                    let target_square = start_square as i8 + DIRECTION_OFFSETS[dir_index];
+
+                    if !(0..=63).contains(&target_square) {
+                        continue;
+                    }
+
+                    let piece_on_target_square = self.pieces[target_square as usize];
+
+                    if Piece::is_colour_bool(piece_on_target_square, self.colour_to_move) {
+                        continue;
+                    }
+
+                    let m_move = Move::new(start_square as u16, target_square as u16);
+                    moves.push(m_move);
+                }
+            }
         }
 
         moves

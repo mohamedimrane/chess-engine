@@ -14,7 +14,8 @@ mod piece;
 fn main() {
     println!("Hello, world!");
 
-    let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/8/8/7N w QKqk").unwrap();
+    let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/2KR2R1/8/7N w QKqk").unwrap();
+    // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk").unwrap();
 
     // board.make_move(Move::new(7, 13));
 
@@ -24,6 +25,14 @@ fn main() {
     println!("move count: {}", moves.len());
 
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
+        if line == "list" || line == "moves" {
+            println!("moves: ");
+            for v_move in moves.iter() {
+                println!("{}", repr_move(*v_move));
+            }
+            continue;
+        }
+
         print!("\n\n\n");
 
         let moves = board.generate_moves();
