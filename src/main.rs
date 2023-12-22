@@ -1,7 +1,5 @@
 use std::io::BufRead;
 
-use moves::Move;
-
 use crate::{board::Board, piece::Piece};
 
 mod board;
@@ -14,8 +12,9 @@ mod piece;
 fn main() {
     println!("Hello, world!");
 
-    let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/2KR2R1/8/7N w QKqk").unwrap();
+    // let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/2KR2R1/PPPPPPPP/7N w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk").unwrap();
+    let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
 
     // board.make_move(Move::new(7, 13));
 
@@ -25,6 +24,7 @@ fn main() {
     println!("move count: {}", moves.len());
 
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
+        let moves = board.generate_moves();
         if line == "list" || line == "moves" {
             println!("moves: ");
             for v_move in moves.iter() {
@@ -35,7 +35,6 @@ fn main() {
 
         print!("\n\n\n");
 
-        let moves = board.generate_moves();
         println!("move count: {}", moves.len());
 
         let v_move = process_move(line);

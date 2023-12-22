@@ -246,6 +246,56 @@ impl Board {
                     let m_move = Move::new(start_square as u16, target_square as u16);
                     moves.push(m_move);
                 }
+
+                continue;
+            }
+
+            if Piece::is_type(piece_type, Piece::Pawn) {
+                let direction_index = match self.colour_to_move {
+                    Colour::White => 0,
+                    Colour::Black => 1,
+                };
+
+                let second_rank = match self.colour_to_move {
+                    Colour::White => (8, 15),
+                    Colour::Black => (47, 55),
+                };
+
+                if NUM_SQUARES_TO_EDGE[start_square][direction_index] == 0 {
+                    continue;
+                }
+
+                let target_square = start_square as i8 + DIRECTION_OFFSETS[direction_index];
+
+                if !(0..=63).contains(&target_square) {
+                    continue;
+                }
+
+                let piece_on_target_square = self.pieces[target_square as usize];
+
+                if piece_on_target_square != Piece::None {
+                    continue;
+                }
+
+                let m_move = Move::new(start_square as u16, target_square as u16);
+                moves.push(m_move);
+
+                if !(second_rank.0..=second_rank.1).contains(&start_square) {
+                    continue;
+                }
+
+                let target_square = start_square as i8 + DIRECTION_OFFSETS[direction_index] * 2;
+
+                let piece_on_target_square = self.pieces[target_square as usize];
+
+                if piece_on_target_square != Piece::None {
+                    continue;
+                }
+
+                let m_move = Move::new(start_square as u16, target_square as u16);
+                moves.push(m_move);
+
+                continue;
             }
         }
 
