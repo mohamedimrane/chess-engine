@@ -10,43 +10,47 @@ mod moves;
 mod piece;
 
 fn main() {
-    println!("Hello, world!");
-
     // let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/2KR2R1/PPPPPPPP/7N w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk").unwrap();
     let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
 
-    // board.make_move(Move::new(7, 13));
-
-    println!("{}", board.stringify(Piece::White));
-
-    let moves = board.generate_moves();
-    println!("move count: {}", moves.len());
-
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
+        print!("> ");
         let moves = board.generate_moves();
-        if line == "list" || line == "moves" {
-            println!("moves: ");
-            for v_move in moves.iter() {
-                println!("{}", repr_move(*v_move));
+
+        'blk: {
+            match line.as_str() {
+                "listmoves" | "list" | "moves" => {
+                    println!(
+                        "moves ({}): {:?}",
+                        moves.len(),
+                        moves.iter().map(|m| repr_move(*m)).collect::<Vec<_>>()
+                    );
+                }
+
+                a if a.contains("play") || a.contains("move") => {
+                    let move_string = line.split_whitespace().collect::<Vec<_>>()[1];
+
+                    // println!("{:?}", move_string);
+                    let v_move = process_move(move_string.to_string());
+
+                    if !moves.contains(&v_move) {
+                        println!("invalid move: {}", v_move);
+                        break 'blk;
+                    }
+
+                    // board.make_move(v_move);
+
+                    // println!()
+                }
+
+                _ => {
+                    println!("invalid command: {}", line);
+                }
             }
-            continue;
         }
 
-        print!("\n\n\n");
-
-        println!("move count: {}", moves.len());
-
-        let v_move = process_move(line);
-
-        if !moves.contains(&v_move) {
-            println!("Invalid move");
-            continue;
-        }
-
-        board.make_move(v_move);
-
-        println!("{}", board.stringify(Piece::White));
+        println!("\n");
     }
 }
 
@@ -66,9 +70,7 @@ fn process_move(string: String) -> u16 {
     let departure_square = departure_rank * 8 + departure_file;
     let target_square = target_rank * 8 + target_file;
 
-    let v_move = departure_square | target_square << 6;
-
-    v_move
+    departure_square | target_square << 6
 }
 
 fn repr_move(v_move: u16) -> String {
@@ -77,7 +79,7 @@ fn repr_move(v_move: u16) -> String {
     let (departure_file, departure_rank) = square_to_coods(departure_square);
     let (target_file, target_rank) = square_to_coods(target_square);
     format!(
-        "{}{} to {}{}",
+        "{}{}{}{}",
         get_file_letter(departure_file),
         departure_rank + 1,
         get_file_letter(target_file),
