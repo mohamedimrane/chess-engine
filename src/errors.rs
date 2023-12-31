@@ -6,3 +6,11 @@ pub enum FenError {
     InvalidColor,
     InvalidCastlingCharacter,
 }
+
+#[derive(Debug)]
+pub enum MoveError {
+    InvalidMove,
+    MissingSquares,
+    InvalidFile,
+    InvalidRank,
+}

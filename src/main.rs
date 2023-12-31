@@ -1,6 +1,10 @@
 use std::io::BufRead;
 
-use crate::{board::Board, piece::Piece};
+use errors::MoveError;
+
+use crate::board::Board;
+
+use colored::*;
 
 mod board;
 mod castling_rights;
@@ -15,62 +19,106 @@ fn main() {
     let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
 
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
-        print!("> ");
         let moves = board.generate_moves();
 
-        'blk: {
-            match line.as_str() {
-                "listmoves" | "list" | "moves" => {
-                    println!(
-                        "moves ({}): {:?}",
-                        moves.len(),
-                        moves.iter().map(|m| repr_move(*m)).collect::<Vec<_>>()
-                    );
+        match line.as_str() {
+            "listmoves" | "list" | "moves" => {
+                list_moves(&moves);
+            }
+
+            a if a.contains("play") || a.contains("move") => 'blk: {
+                let move_str = line.split_whitespace().collect::<Vec<_>>()[1];
+                let move_str = move_str.to_string();
+
+                let move_err = make_move(move_str.clone(), &moves, &mut board);
+                if let Err(e) = move_err {
+                    println!("{} ({:?}): {}", "invalid move".red(), e, move_str);
+                    // match e {
+                    //     MoveError::InvalidMove => {
+                    //         println!("{} {}", "invalid move:".red(), move_str);
+                    //     }
+                    //     MoveError::MissingSquares => {
+                    //         println!("{} {}", "missing squares: ".red(), move_str);
+                    //     }
+                    //     MoveError::InvalidFile => {
+                    //         println!("{} {}", "invalid file: ".red(), move_str);
+                    //     }
+                    //     MoveError::InvalidRank => {
+                    //         println!("{} {}", "invalid rank: ".red(), move_str);
+                    //     }
+                    // };
+
+                    break 'blk;
                 }
+            }
 
-                a if a.contains("play") || a.contains("move") => {
-                    let move_string = line.split_whitespace().collect::<Vec<_>>()[1];
-
-                    // println!("{:?}", move_string);
-                    let v_move = process_move(move_string.to_string());
-
-                    if !moves.contains(&v_move) {
-                        println!("invalid move: {}", v_move);
-                        break 'blk;
-                    }
-
-                    // board.make_move(v_move);
-
-                    // println!()
-                }
-
-                _ => {
-                    println!("invalid command: {}", line);
-                }
+            _ => {
+                println!("{} {}", "invalid command:".red(), line);
             }
         }
 
-        println!("\n");
+        // println!("\n");
     }
 }
 
-fn process_move(string: String) -> u16 {
+fn list_moves(moves: &Vec<u16>) {
+    println!(
+        "moves ({}): {:?}",
+        moves.len(),
+        moves.iter().map(|m| repr_move(*m)).collect::<Vec<_>>()
+    );
+}
+
+fn make_move(move_string: String, moves: &[u16], board: &mut Board) -> Result<(), MoveError> {
+    let v_move = process_move(move_string.to_string())?;
+
+    if !moves.contains(&v_move) {
+        return Err(MoveError::InvalidMove);
+    }
+
+    board.make_move(v_move);
+
+    println!("{} {}", "played move:".green(), move_string);
+
+    Ok(())
+}
+
+fn process_move(string: String) -> Result<u16, MoveError> {
     let chars: Vec<char> = string.chars().collect();
 
-    let (departure_file, departure_rank, target_file, target_rank) =
-        (chars[0], chars[1], chars[2], chars[3]);
+    let departure_file = chars.get(0);
+    let departure_rank = chars.get(1);
+    let target_file = chars.get(2);
+    let target_rank = chars.get(3);
 
-    let (departure_file, departure_rank, target_file, target_rank) = (
-        get_file_number(departure_file),
-        departure_rank.to_digit(10).unwrap() as u16 - 1,
-        get_file_number(target_file),
-        target_rank.to_digit(10).unwrap() as u16 - 1,
-    );
+    if departure_file.is_none()
+        || departure_rank.is_none()
+        || target_file.is_none()
+        || target_rank.is_none()
+    {
+        return Err(MoveError::MissingSquares);
+    }
 
-    let departure_square = departure_rank * 8 + departure_file;
-    let target_square = target_rank * 8 + target_file;
+    let departure_file = get_file_number(*departure_file.unwrap());
+    let target_file = get_file_number(*target_file.unwrap());
 
-    departure_square | target_square << 6
+    if let (None, None) = (departure_file, target_file) {
+        return Err(MoveError::InvalidRank);
+    }
+
+    let departure_rank = departure_rank.unwrap().to_digit(10);
+    let target_rank = target_rank.unwrap().to_digit(10);
+    if let (None, None) = (departure_rank, target_rank) {
+        return Err(MoveError::InvalidRank);
+    }
+
+    let departure_rank = departure_rank.unwrap() as u16 - 1;
+    let target_rank = target_rank.unwrap() as u16 - 1;
+
+    let departure_square = departure_rank * 8 + departure_file.unwrap();
+    let target_square = target_rank * 8 + target_file.unwrap();
+
+    Ok(departure_square | target_square << 6)
 }
 
 fn repr_move(v_move: u16) -> String {
@@ -99,6 +147,9 @@ fn get_file_letter(file: u16) -> char {
     FILE_LETTERS[file as usize]
 }
 
-fn get_file_number(file: char) -> u16 {
-    FILE_LETTERS.iter().position(|&a| a == file).unwrap() as u16
+fn get_file_number(file: char) -> Option<u16> {
+    FILE_LETTERS
+        .iter()
+        .position(|&a| a == file)
+        .map(|x| x as u16)
 }
