@@ -16,7 +16,10 @@ mod piece;
 fn main() {
     // let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/2KR2R1/PPPPPPPP/7N w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk").unwrap();
-    let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
+    // let mut board = Board::from_fen("8/8/8/1p1p3/8/2P4/8/8 w QKqk").unwrap();
+    // let mut board = Board::from_fen("8/8/8/3pP2/8/8/8/8 w QKqk").unwrap();
+    // let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
+    let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
 
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
         let moves = board.generate_moves();
