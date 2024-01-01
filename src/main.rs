@@ -19,8 +19,8 @@ fn main() {
     // let mut board = Board::from_fen("8/8/8/1p1p3/8/2P4/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/3pP2/8/8/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
-    let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
-    println!("{}", board.evaluate());
+    // let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
+    let mut board = Board::from_fen("7b/1r2N1pp/3k4/Q7/3n3K/2p5/R1PP4/1n1q1B2 w -").unwrap();
 
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
         let moves = board.generate_moves();
@@ -51,6 +51,17 @@ fn main() {
 
             "show" | "display" | "board" => {
                 println!("{}", board.stringify(Colour::White));
+            }
+
+            "eval" | "evaluate" | "evaluation" => {
+                let eval_string = match board.evaluate() {
+                    n if n == 0 => "0".normal(),
+                    n if n > 0 => format!("{}", n).bright_green(),
+                    n if n < 0 => format!("{}", n).bright_red(),
+                    _ => unreachable!(),
+                };
+
+                println!("{}", format!("evaluation: {}", eval_string).green());
             }
 
             "play" | "move" => 'blk: {

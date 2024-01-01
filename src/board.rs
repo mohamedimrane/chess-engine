@@ -334,11 +334,18 @@ impl Board {
     }
 
     pub fn evaluate(&self) -> i32 {
-        let mut eveluation = 0;
+        let white_evaluation = self.evaluate_colour(Colour::White);
+        let black_evaluation = self.evaluate_colour(Colour::Black);
+
+        white_evaluation - black_evaluation
+    }
+
+    fn evaluate_colour(&self, colour: bool) -> i32 {
+        let mut evaluation = 0;
 
         let mut material = 0;
         for piece in self.pieces {
-            if !Piece::is_colour_bool(piece, self.colour_to_move) {
+            if !Piece::is_colour_bool(piece, colour) {
                 continue;
             }
 
@@ -353,9 +360,9 @@ impl Board {
             };
         }
 
-        eveluation += material;
+        evaluation += material;
 
-        eveluation
+        evaluation
     }
 
     #[allow(dead_code)]
