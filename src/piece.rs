@@ -16,6 +16,12 @@ impl Piece {
     pub const Queen: u8 = 0b101; // 0101 => 5
     pub const King: u8 = 0b110; // 0111 => 6
 
+    pub const PawnValue: i32 = 100;
+    pub const KnightValue: i32 = 300;
+    pub const BishopValue: i32 = 300;
+    pub const RookValue: i32 = 500;
+    pub const QueenValue: i32 = 900;
+
     pub const White: u8 = 0b00010000; // 1000 => 16
     pub const Black: u8 = 0b00100000; // 10000 => 32
 

@@ -333,6 +333,31 @@ impl Board {
         moves
     }
 
+    pub fn evaluate(&self) -> i32 {
+        let mut eveluation = 0;
+
+        let mut material = 0;
+        for piece in self.pieces {
+            if !Piece::is_colour_bool(piece, self.colour_to_move) {
+                continue;
+            }
+
+            material += match Piece::piece_type(piece) {
+                Piece::Pawn => Piece::PawnValue,
+                Piece::Knight => Piece::KnightValue,
+                Piece::Bishop => Piece::BishopValue,
+                Piece::Rook => Piece::RookValue,
+                Piece::Queen => Piece::QueenValue,
+                Piece::King => continue,
+                _ => unreachable!(),
+            };
+        }
+
+        eveluation += material;
+
+        eveluation
+    }
+
     #[allow(dead_code)]
     pub fn new() -> Self {
         let mut board = Self::default();
