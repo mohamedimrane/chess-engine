@@ -27,7 +27,7 @@ fn main() {
         match line.as_str() {
             "" => {}
 
-            "listmoves" | "list" | "moves" => {
+            "listmoves" | "list" | "moves" | "ls" => {
                 println!(
                     "{} {:?}",
                     format!("moves ({}):", moves.len()).green(),
@@ -39,9 +39,10 @@ fn main() {
                 println!("{}", board.stringify(Colour::White));
             }
 
-            a if a.contains("play") || a.contains("move") => 'blk: {
-                let move_str = line.split_whitespace().collect::<Vec<_>>()[1];
-                let move_str = move_str.to_string();
+            a if a.starts_with("play") || a.starts_with("move") => 'blk: {
+                let command_strs = line.split_whitespace().collect::<Vec<_>>();
+
+                let move_str = command_strs[1].to_string();
 
                 let move_err = make_move(move_str.clone(), &moves, &mut board);
                 if let Err(e) = move_err {
