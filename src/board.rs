@@ -407,7 +407,7 @@ impl Board {
         Ok(board)
     }
 
-    pub fn stringify(&self, perspective: u8) -> String {
+    pub fn stringify(&self, perspective: bool) -> String {
         let mut string = String::new();
 
         for rank in 0..8 {
@@ -416,8 +416,8 @@ impl Board {
             string.push_str("| ");
             for file in 0..8 {
                 let perspective = match perspective {
-                    Piece::White => (7 - rank, file),
-                    Piece::Black => (rank, 7 - file),
+                    Colour::White => (7 - rank, file),
+                    Colour::Black => (rank, 7 - file),
                     _ => panic!("strigification: invalid perspective"),
                 };
 

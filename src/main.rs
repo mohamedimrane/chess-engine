@@ -2,7 +2,7 @@ use std::io::BufRead;
 
 use errors::MoveError;
 
-use crate::board::Board;
+use crate::{board::Board, colour::Colour};
 
 use colored::*;
 
@@ -22,8 +22,18 @@ fn main() {
         let moves = board.generate_moves();
 
         match line.as_str() {
+            "" => {}
+
             "listmoves" | "list" | "moves" => {
-                list_moves(&moves);
+                println!(
+                    "{} {:?}",
+                    format!("moves ({}):", moves.len()).green(),
+                    moves.iter().map(|m| repr_move(*m)).collect::<Vec<_>>()
+                );
+            }
+
+            "show" | "display" | "board" => {
+                println!("{}", board.stringify(Colour::White));
             }
 
             a if a.contains("play") || a.contains("move") => 'blk: {
@@ -57,16 +67,8 @@ fn main() {
             }
         }
 
-        // println!("\n");
+        print!("\n{}\n\n", "-".repeat(60));
     }
-}
-
-fn list_moves(moves: &Vec<u16>) {
-    println!(
-        "moves ({}): {:?}",
-        moves.len(),
-        moves.iter().map(|m| repr_move(*m)).collect::<Vec<_>>()
-    );
 }
 
 fn make_move(move_string: String, moves: &[u16], board: &mut Board) -> Result<(), MoveError> {
