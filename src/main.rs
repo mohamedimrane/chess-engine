@@ -24,7 +24,20 @@ fn main() {
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
         let moves = board.generate_moves();
 
-        match line.as_str() {
+        let line_split = line.split_once(' ');
+
+        let verb;
+        let mut args = Vec::new();
+
+        match line_split {
+            None => verb = line.as_str(),
+            Some(line_split) => {
+                verb = line_split.0;
+                args = line_split.1.split_whitespace().collect();
+            }
+        }
+
+        match verb {
             "" => {}
 
             "listmoves" | "list" | "moves" | "ls" => {
@@ -39,12 +52,20 @@ fn main() {
                 println!("{}", board.stringify(Colour::White));
             }
 
-            a if a.starts_with("play") || a.starts_with("move") => 'blk: {
-                let command_strs = line.split_whitespace().collect::<Vec<_>>();
+            "play" | "move" => 'blk: {
+                // let command_strs = line.split_whitespace().collect::<Vec<_>>();
 
-                let move_str = command_strs[1].to_string();
+                // let move_str = command_strs[1].to_string();
 
-                let move_err = make_move(move_str.clone(), &moves, &mut board);
+                let move_str = match args.first() {
+                    Some(m) => *m,
+                    None => {
+                        println!("{}", "arg error: no move provided".red());
+                        break 'blk;
+                    }
+                };
+
+                let move_err = make_move(move_str, &moves, &mut board);
                 if let Err(e) = move_err {
                     println!("{} ({:?}): {}", "invalid move".red(), e, move_str);
                     // match e {
@@ -75,8 +96,8 @@ fn main() {
     }
 }
 
-fn make_move(move_string: String, moves: &[u16], board: &mut Board) -> Result<(), MoveError> {
-    let v_move = process_move(move_string.to_string())?;
+fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), MoveError> {
+    let v_move = process_move(move_string)?;
 
     if !moves.contains(&v_move) {
         return Err(MoveError::InvalidMove);
@@ -89,7 +110,7 @@ fn make_move(move_string: String, moves: &[u16], board: &mut Board) -> Result<()
     Ok(())
 }
 
-fn process_move(string: String) -> Result<u16, MoveError> {
+fn process_move(string: &str) -> Result<u16, MoveError> {
     let chars: Vec<char> = string.chars().collect();
 
     let departure_file = chars.get(0);
