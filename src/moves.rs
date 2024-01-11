@@ -77,6 +77,10 @@ impl Move {
             || (v_move & Self::CASTLING_MASK) == Self::LongCastle && !Self::is_promotion(v_move)
     }
 
+    pub fn is_short_castling(v_move: u16) -> bool {
+        (v_move & Self::CASTLING_MASK) == Self::ShortCastle && !Self::is_promotion(v_move)
+    }
+
     pub fn special_one(v_move: u16) -> bool {
         (v_move & Self::SPECIAL_ONE_MASK) == Self::SPECIAL_ONE_MASK
     }

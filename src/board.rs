@@ -46,6 +46,7 @@ const KNIGHTS_OFFSETS: [(i8, i8); 8] = [
     (1, -2),
     (-1, -2),
 ];
+const CASTLING_SQUARES: ((i8, i8), (i8, i8)) = ((4, 7), (60, 63));
 
 pub struct Board {
     pieces: [u8; 64],
@@ -327,6 +328,21 @@ impl Board {
                 moves.push(m_move);
 
                 continue;
+            }
+        }
+
+        if CastlingRights::can_short_castle(self.castling_rights) {
+            let castling_squares = match self.colour_to_move {
+                Colour::White => CASTLING_SQUARES.0,
+                Colour::Black => CASTLING_SQUARES.1,
+            };
+
+            if self.pieces[castling_squares.0 as usize + 1] == Piece::None
+                && self.pieces[castling_squares.0 as usize + 2] == Piece::None
+            {
+                let v_move = Move::ShortCastle;
+
+                moves.push(v_move);
             }
         }
 

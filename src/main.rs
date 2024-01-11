@@ -1,6 +1,7 @@
 use std::io::BufRead;
 
 use errors::MoveError;
+use moves::Move;
 
 use crate::{board::Board, colour::Colour};
 
@@ -20,7 +21,8 @@ fn main() {
     // let mut board = Board::from_fen("8/8/8/3pP2/8/8/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
-    let mut board = Board::from_fen("7b/1r2N1pp/3k4/Q7/3n3K/2p5/R1PP4/1n1q1B2 w -").unwrap();
+    // let mut board = Board::from_fen("7b/1r2N1pp/3k4/Q7/3n3K/2p5/R1PP4/1n1q1B2 w -").unwrap();
+    let mut board = Board::from_fen("4k2r/7p/7P/8/8/7p/7P/4K2R w Kk").unwrap();
 
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
         let moves = board.generate_moves();
@@ -123,6 +125,10 @@ fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), 
 }
 
 fn process_move(string: &str) -> Result<u16, MoveError> {
+    if string == "o-o" || string == "O-O" || string == "0-0" {
+        return Ok(Move::ShortCastle);
+    }
+
     let chars: Vec<char> = string.chars().collect();
 
     let departure_file = chars.get(0);
@@ -161,6 +167,10 @@ fn process_move(string: &str) -> Result<u16, MoveError> {
 }
 
 fn repr_move(v_move: u16) -> String {
+    if Move::is_short_castling(v_move) {
+        return "O-O".to_string();
+    }
+
     let departure_square = v_move & 0b111111;
     let target_square = (v_move & 0b111111000000) >> 6;
     let (departure_file, departure_rank) = square_to_coods(departure_square);
