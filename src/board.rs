@@ -2,7 +2,11 @@ use lazy_static::lazy_static;
 use std::cmp::min;
 
 use crate::{
-    castling_rights::CastlingRights, colour::Colour, errors::FenError, moves::Move, piece::Piece,
+    castling_rights::CastlingRights,
+    colour::Colour,
+    errors::{FenError, UndoMoveError},
+    moves::{Move, MoveRecord, MoveType},
+    piece::Piece,
 };
 
 lazy_static! {
@@ -52,93 +56,114 @@ pub struct Board {
     pieces: [u8; 64],
     colour_to_move: bool,
     castling_rights: u8,
+    move_history: Vec<MoveRecord>,
 }
 
 impl Board {
-    pub fn make_move(&mut self, v_move: u16) {
-        let departure_square = Move::departure_square(v_move) as usize;
-        let target_square = Move::target_square(v_move) as usize;
-        let promotion = Move::is_promotion(v_move);
-        let castling = Move::is_castling(v_move);
-        let special_one = Move::special_one(v_move);
-        let special_two = Move::special_two(v_move);
+    pub fn evaluate(&self) -> i32 {
+        let white_evaluation = self.evaluate_colour(Colour::White);
+        let black_evaluation = self.evaluate_colour(Colour::Black);
 
-        let active_colour = self.colour_to_move;
+        white_evaluation - black_evaluation
+    }
 
-        self.colour_to_move = !self.colour_to_move;
+    fn evaluate_colour(&self, colour: bool) -> i32 {
+        let mut evaluation = 0;
 
-        if promotion {
-            let promotion_type = Move::promotion_type(v_move);
-            let piece_to_promote_to = match promotion_type {
-                Move::PromoteToKnight => Piece::Knight,
-                Move::PromoteToBishop => Piece::Bishop,
-                Move::PromoteToRook => Piece::Rook,
-                Move::PromoteToQueen => Piece::Queen,
+        let mut material = 0;
+        for piece in self.pieces {
+            if !Piece::is_colour_bool(piece, colour) {
+                continue;
+            }
+
+            material += match Piece::piece_type(piece) {
+                Piece::Pawn => Piece::PawnValue,
+                Piece::Knight => Piece::KnightValue,
+                Piece::Bishop => Piece::BishopValue,
+                Piece::Rook => Piece::RookValue,
+                Piece::Queen => Piece::QueenValue,
+                Piece::King => continue,
                 _ => unreachable!(),
             };
-            let piece_colour = Piece::colour(self.pieces[departure_square]);
-
-            self.pieces[target_square] = piece_colour | piece_to_promote_to;
-            self.pieces[departure_square] = Piece::None;
-
-            return;
         }
 
-        if castling {
-            let castling_rights = CastlingRights::rights(self.castling_rights, active_colour);
+        evaluation += material;
 
-            if castling_rights == CastlingRights::CanNotCastle {
-                return;
+        evaluation
+    }
+
+    pub fn from_fen(fen: &str) -> Result<Self, FenError> {
+        let splited_fen: Vec<&str> = fen.split(' ').collect();
+        let mut board = Self::default();
+
+        board.colour_to_move = match splited_fen[1] {
+            "w" => Colour::White,
+            "b" => Colour::Black,
+            _ => return Err(FenError::InvalidColor),
+        };
+
+        for right in splited_fen[2].chars() {
+            board.castling_rights |= match right {
+                'K' => CastlingRights::WhiteCanShortCastle,
+                'Q' => CastlingRights::WhiteCanLongCastle,
+                'k' => CastlingRights::BlackCanShortCastle,
+                'q' => CastlingRights::BlackCanLongCastle,
+                '-' => {
+                    board.castling_rights =
+                        CastlingRights::WhiteCanNotCastle | CastlingRights::BlackCanNotCastle;
+                    break;
+                }
+                _ => return Err(FenError::InvalidCastlingCharacter),
             }
-
-            let (king_file, king_rank) = match active_colour {
-                Colour::White => (4, 0),
-                Colour::Black => (4, 7),
-            };
-
-            if special_one && CastlingRights::can_short_castle(castling_rights) {
-                self.castling_rights = match active_colour {
-                    Colour::White => {
-                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
-                    }
-                    Colour::Black => {
-                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
-                    }
-                };
-
-                let king_index = king_rank * 8 + king_file;
-                let king = self.pieces[king_index];
-                let rook = self.pieces[king_index + 3];
-                self.pieces[king_index] = Piece::None;
-                self.pieces[king_index + 3] = Piece::None;
-                self.pieces[king_index + 2] = king;
-                self.pieces[king_index + 1] = rook;
-            }
-
-            if special_two && CastlingRights::can_long_castle(castling_rights) {
-                self.castling_rights = match active_colour {
-                    Colour::White => {
-                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
-                    }
-                    Colour::Black => {
-                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
-                    }
-                };
-
-                let king_index = king_rank * 8 + king_file;
-                let king = self.pieces[king_index];
-                let rook = self.pieces[king_index - 4];
-                self.pieces[king_index] = Piece::None;
-                self.pieces[king_index - 4] = Piece::None;
-                self.pieces[king_index - 2] = king;
-                self.pieces[king_index - 1] = rook;
-            }
-
-            return;
         }
 
-        self.pieces[target_square] = self.pieces[departure_square];
-        self.pieces[departure_square] = Piece::None;
+        let pieces = splited_fen[0].chars();
+        let mut file: usize = 0;
+        let mut rank: usize = 0;
+        for c in pieces {
+            if c == '/' {
+                rank += 1;
+                file = 0;
+
+                if rank > 8 {
+                    return Err(FenError::RankTooBig(rank));
+                }
+                continue;
+            }
+
+            if c.is_numeric() {
+                let num = c.to_digit(10).unwrap() as usize;
+                if num + file > 8 {
+                    return Err(FenError::FileTooBig(num));
+                }
+                file += num;
+                continue;
+            }
+
+            if c.is_alphabetic() {
+                let color = match c {
+                    c if c.is_uppercase() => Piece::White,
+                    c if c.is_lowercase() => Piece::Black,
+                    _ => return Err(FenError::CharNotReconized),
+                };
+
+                let kind = match c.to_lowercase().next().unwrap() {
+                    'p' => Piece::Pawn,
+                    'n' => Piece::Knight,
+                    'b' => Piece::Bishop,
+                    'r' => Piece::Rook,
+                    'q' => Piece::Queen,
+                    'k' => Piece::King,
+                    _ => return Err(FenError::CharNotReconized),
+                };
+
+                board.pieces[(7 - rank) * 8 + file] = color | kind;
+                file += 1;
+                continue;
+            }
+        }
+
+        Ok(board)
     }
 
     pub fn generate_moves(&self) -> Vec<u16> {
@@ -365,36 +390,97 @@ impl Board {
         moves
     }
 
-    pub fn evaluate(&self) -> i32 {
-        let white_evaluation = self.evaluate_colour(Colour::White);
-        let black_evaluation = self.evaluate_colour(Colour::Black);
+    pub fn make_move(&mut self, v_move: u16) {
+        let departure_square = Move::departure_square(v_move) as usize;
+        let target_square = Move::target_square(v_move) as usize;
+        let promotion = Move::is_promotion(v_move);
+        let castling = Move::is_castling(v_move);
+        let special_one = Move::special_one(v_move);
+        let special_two = Move::special_two(v_move);
 
-        white_evaluation - black_evaluation
-    }
+        let active_colour = self.colour_to_move;
 
-    fn evaluate_colour(&self, colour: bool) -> i32 {
-        let mut evaluation = 0;
+        self.colour_to_move = !self.colour_to_move;
 
-        let mut material = 0;
-        for piece in self.pieces {
-            if !Piece::is_colour_bool(piece, colour) {
-                continue;
-            }
-
-            material += match Piece::piece_type(piece) {
-                Piece::Pawn => Piece::PawnValue,
-                Piece::Knight => Piece::KnightValue,
-                Piece::Bishop => Piece::BishopValue,
-                Piece::Rook => Piece::RookValue,
-                Piece::Queen => Piece::QueenValue,
-                Piece::King => continue,
+        if promotion {
+            let promotion_type = Move::promotion_type(v_move);
+            let piece_to_promote_to = match promotion_type {
+                Move::PromoteToKnight => Piece::Knight,
+                Move::PromoteToBishop => Piece::Bishop,
+                Move::PromoteToRook => Piece::Rook,
+                Move::PromoteToQueen => Piece::Queen,
                 _ => unreachable!(),
             };
+            let piece_colour = Piece::colour(self.pieces[departure_square]);
+
+            self.pieces[target_square] = piece_colour | piece_to_promote_to;
+            self.pieces[departure_square] = Piece::None;
+
+            return;
         }
 
-        evaluation += material;
+        if castling {
+            let castling_rights = CastlingRights::rights(self.castling_rights, active_colour);
 
-        evaluation
+            if castling_rights == CastlingRights::CanNotCastle {
+                return;
+            }
+
+            let (king_file, king_rank) = match active_colour {
+                Colour::White => (4, 0),
+                Colour::Black => (4, 7),
+            };
+
+            if special_one && CastlingRights::can_short_castle(castling_rights) {
+                self.castling_rights = match active_colour {
+                    Colour::White => {
+                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
+                    }
+                    Colour::Black => {
+                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
+                    }
+                };
+
+                let king_index = king_rank * 8 + king_file;
+                let king = self.pieces[king_index];
+                let rook = self.pieces[king_index + 3];
+                self.pieces[king_index] = Piece::None;
+                self.pieces[king_index + 3] = Piece::None;
+                self.pieces[king_index + 2] = king;
+                self.pieces[king_index + 1] = rook;
+            }
+
+            if special_two && CastlingRights::can_long_castle(castling_rights) {
+                self.castling_rights = match active_colour {
+                    Colour::White => {
+                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
+                    }
+                    Colour::Black => {
+                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
+                    }
+                };
+
+                let king_index = king_rank * 8 + king_file;
+                let king = self.pieces[king_index];
+                let rook = self.pieces[king_index - 4];
+                self.pieces[king_index] = Piece::None;
+                self.pieces[king_index - 4] = Piece::None;
+                self.pieces[king_index - 2] = king;
+                self.pieces[king_index - 1] = rook;
+            }
+
+            return;
+        }
+
+        let move_record = MoveRecord {
+            v_move,
+            piece_on_target_square: self.pieces[target_square],
+            v_type: MoveType::Normal,
+        };
+        self.move_history.push(move_record);
+
+        self.pieces[target_square] = self.pieces[departure_square];
+        self.pieces[departure_square] = Piece::None;
     }
 
     #[allow(dead_code)]
@@ -426,80 +512,6 @@ impl Board {
         }
 
         board
-    }
-
-    pub fn from_fen(fen: &str) -> Result<Self, FenError> {
-        let splited_fen: Vec<&str> = fen.split(' ').collect();
-        let mut board = Self::default();
-
-        board.colour_to_move = match splited_fen[1] {
-            "w" => Colour::White,
-            "b" => Colour::Black,
-            _ => return Err(FenError::InvalidColor),
-        };
-
-        for right in splited_fen[2].chars() {
-            board.castling_rights |= match right {
-                'K' => CastlingRights::WhiteCanShortCastle,
-                'Q' => CastlingRights::WhiteCanLongCastle,
-                'k' => CastlingRights::BlackCanShortCastle,
-                'q' => CastlingRights::BlackCanLongCastle,
-                '-' => {
-                    board.castling_rights =
-                        CastlingRights::WhiteCanNotCastle | CastlingRights::BlackCanNotCastle;
-                    break;
-                }
-                _ => return Err(FenError::InvalidCastlingCharacter),
-            }
-        }
-
-        let pieces = splited_fen[0].chars();
-        let mut file: usize = 0;
-        let mut rank: usize = 0;
-        for c in pieces {
-            if c == '/' {
-                rank += 1;
-                file = 0;
-
-                if rank > 8 {
-                    return Err(FenError::RankTooBig(rank));
-                }
-                continue;
-            }
-
-            if c.is_numeric() {
-                let num = c.to_digit(10).unwrap() as usize;
-                if num + file > 8 {
-                    return Err(FenError::FileTooBig(num));
-                }
-                file += num;
-                continue;
-            }
-
-            if c.is_alphabetic() {
-                let color = match c {
-                    c if c.is_uppercase() => Piece::White,
-                    c if c.is_lowercase() => Piece::Black,
-                    _ => return Err(FenError::CharNotReconized),
-                };
-
-                let kind = match c.to_lowercase().next().unwrap() {
-                    'p' => Piece::Pawn,
-                    'n' => Piece::Knight,
-                    'b' => Piece::Bishop,
-                    'r' => Piece::Rook,
-                    'q' => Piece::Queen,
-                    'k' => Piece::King,
-                    _ => return Err(FenError::CharNotReconized),
-                };
-
-                board.pieces[(7 - rank) * 8 + file] = color | kind;
-                file += 1;
-                continue;
-            }
-        }
-
-        Ok(board)
     }
 
     pub fn stringify(&self, perspective: bool) -> String {
@@ -544,6 +556,30 @@ impl Board {
 
         string
     }
+
+    pub fn undo_move(&mut self) -> Result<(), UndoMoveError> {
+        let move_record = match self.move_history.pop() {
+            Some(v) => v,
+            None => return Err(UndoMoveError::EmptyStack),
+        };
+        let v_move = move_record.v_move;
+
+        let departure_square = Move::departure_square(v_move) as usize;
+        let target_square = Move::target_square(v_move) as usize;
+        // let promotion = Move::is_promotion(v_move);
+        // let castling = Move::is_castling(v_move);
+        // let special_one = Move::special_one(v_move);
+        // let special_two = Move::special_two(v_move);
+
+        self.colour_to_move = !self.colour_to_move;
+
+        if let MoveType::Normal = move_record.v_type {
+            self.pieces[departure_square] = self.pieces[target_square];
+            self.pieces[target_square] = move_record.piece_on_target_square;
+        }
+
+        Ok(())
+    }
 }
 
 impl Default for Board {
@@ -552,6 +588,7 @@ impl Default for Board {
             pieces: [0; 64],
             colour_to_move: Colour::White,
             castling_rights: CastlingRights::WhiteCanCastle | CastlingRights::BlackCanCastle,
+            move_history: Vec::new(),
         }
     }
 }

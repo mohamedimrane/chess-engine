@@ -14,3 +14,8 @@ pub enum MoveError {
     InvalidFile,
     InvalidRank,
 }
+
+#[derive(Debug)]
+pub enum UndoMoveError {
+    EmptyStack,
+}

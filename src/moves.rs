@@ -93,3 +93,25 @@ impl Move {
         (v_move & Self::SPECIAL_TWO_MASK) == Self::SPECIAL_TWO_MASK
     }
 }
+
+pub struct MoveRecord {
+    pub v_move: u16,
+    pub piece_on_target_square: u8,
+    pub v_type: MoveType,
+}
+
+pub enum MoveType {
+    Normal,
+    Castling,
+    Promotion,
+}
+
+impl MoveRecord {
+    pub fn new(v_move: u16, piece_on_target_square: u8, v_type: MoveType) -> Self {
+        Self {
+            v_move,
+            piece_on_target_square,
+            v_type,
+        }
+    }
+}

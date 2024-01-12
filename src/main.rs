@@ -20,9 +20,9 @@ fn main() {
     // let mut board = Board::from_fen("8/8/8/1p1p3/8/2P4/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/3pP2/8/8/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
-    // let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
+    let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
     // let mut board = Board::from_fen("7b/1r2N1pp/3k4/Q7/3n3K/2p5/R1PP4/1n1q1B2 w -").unwrap();
-    let mut board = Board::from_fen("r3k2r/p6p/P6P/8/8/p6p/P6P/R3K2R w KQkq").unwrap();
+    // let mut board = Board::from_fen("r3k2r/p6p/P6P/8/8/p6p/P6P/R3K2R w KQkq").unwrap();
 
     for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
         let moves = board.generate_moves();
@@ -53,6 +53,12 @@ fn main() {
 
             "show" | "display" | "board" => {
                 println!("{}", board.stringify(Colour::White));
+            }
+
+            "unmake" | "undo" => {
+                if let Err(e) = board.undo_move() {
+                    println!("{}{:?}", "cannot undo: ".red(), e);
+                }
             }
 
             "eval" | "evaluate" | "evaluation" => {
