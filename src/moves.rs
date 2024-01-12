@@ -97,21 +97,13 @@ impl Move {
 pub struct MoveRecord {
     pub v_move: u16,
     pub piece_on_target_square: u8,
-    pub v_type: MoveType,
-}
-
-pub enum MoveType {
-    Normal,
-    Castling,
-    Promotion,
 }
 
 impl MoveRecord {
-    pub fn new(v_move: u16, piece_on_target_square: u8, v_type: MoveType) -> Self {
+    pub fn new(v_move: u16, piece_on_target_square: u8) -> Self {
         Self {
             v_move,
             piece_on_target_square,
-            v_type,
         }
     }
 }

@@ -5,7 +5,7 @@ use crate::{
     castling_rights::CastlingRights,
     colour::Colour,
     errors::{FenError, UndoMoveError},
-    moves::{Move, MoveRecord, MoveType},
+    moves::{Move, MoveRecord},
     piece::Piece,
 };
 
@@ -431,6 +431,12 @@ impl Board {
                 Colour::Black => (4, 7),
             };
 
+            let move_record = MoveRecord {
+                v_move,
+                piece_on_target_square: 0,
+            };
+            self.move_history.push(move_record);
+
             if special_one && CastlingRights::can_short_castle(castling_rights) {
                 self.castling_rights = match active_colour {
                     Colour::White => {
@@ -475,7 +481,6 @@ impl Board {
         let move_record = MoveRecord {
             v_move,
             piece_on_target_square: self.pieces[target_square],
-            v_type: MoveType::Normal,
         };
         self.move_history.push(move_record);
 
@@ -566,17 +571,48 @@ impl Board {
 
         let departure_square = Move::departure_square(v_move) as usize;
         let target_square = Move::target_square(v_move) as usize;
-        // let promotion = Move::is_promotion(v_move);
-        // let castling = Move::is_castling(v_move);
-        // let special_one = Move::special_one(v_move);
-        // let special_two = Move::special_two(v_move);
+        let promotion = Move::is_promotion(v_move);
+        let castling = Move::is_castling(v_move);
+        let special_one = Move::special_one(v_move);
+        let special_two = Move::special_two(v_move);
 
         self.colour_to_move = !self.colour_to_move;
 
-        if let MoveType::Normal = move_record.v_type {
-            self.pieces[departure_square] = self.pieces[target_square];
-            self.pieces[target_square] = move_record.piece_on_target_square;
+        if promotion {
+            return Ok(());
         }
+
+        if castling {
+            let castling_squares = match self.colour_to_move {
+                Colour::White => CASTLING_SQUARES.0,
+                Colour::Black => CASTLING_SQUARES.1,
+            };
+
+            let piece_colour = match self.colour_to_move {
+                Colour::White => Piece::White,
+                Colour::Black => Piece::Black,
+            };
+
+            if special_one {
+                self.pieces[castling_squares.0 as usize + 1] = Piece::None;
+                self.pieces[castling_squares.0 as usize + 2] = Piece::None;
+                self.pieces[castling_squares.0 as usize] = Piece::King | piece_colour;
+                self.pieces[castling_squares.1 as usize] = Piece::Rook | piece_colour;
+            }
+
+            if special_two {
+                self.pieces[castling_squares.0 as usize - 1] = Piece::None;
+                self.pieces[castling_squares.0 as usize - 2] = Piece::None;
+                self.pieces[castling_squares.0 as usize - 3] = Piece::None;
+                self.pieces[castling_squares.0 as usize] = Piece::King | piece_colour;
+                self.pieces[castling_squares.2 as usize] = Piece::Rook | piece_colour;
+            }
+
+            return Ok(());
+        }
+
+        self.pieces[departure_square] = self.pieces[target_square];
+        self.pieces[target_square] = move_record.piece_on_target_square;
 
         Ok(())
     }
