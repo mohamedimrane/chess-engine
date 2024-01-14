@@ -378,10 +378,6 @@ impl Board {
         let special_one = Move::special_one(v_move);
         let special_two = Move::special_two(v_move);
 
-        let active_colour = self.colour_to_move;
-
-        self.colour_to_move = !self.colour_to_move;
-
         if promotion {
             let promotion_type = Move::promotion_type(v_move);
             let piece_to_promote_to = match promotion_type {
@@ -400,13 +396,13 @@ impl Board {
         }
 
         if castling {
-            let castling_rights = CastlingRights::rights(self.castling_rights, active_colour);
+            let castling_rights = CastlingRights::rights(self.castling_rights, self.colour_to_move);
 
             if castling_rights == CastlingRights::CanNotCastle {
                 return;
             }
 
-            let king_index = match active_colour {
+            let king_index = match self.colour_to_move {
                 Colour::White => 4,
                 Colour::Black => 60,
             };
@@ -418,7 +414,7 @@ impl Board {
             self.move_history.push(move_record);
 
             if special_one && CastlingRights::can_short_castle(castling_rights) {
-                self.castling_rights = match active_colour {
+                self.castling_rights = match self.colour_to_move {
                     Colour::White => {
                         self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
                     }
@@ -436,7 +432,7 @@ impl Board {
             }
 
             if special_two && CastlingRights::can_long_castle(castling_rights) {
-                self.castling_rights = match active_colour {
+                self.castling_rights = match self.colour_to_move {
                     Colour::White => {
                         self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
                     }
@@ -464,6 +460,8 @@ impl Board {
 
         self.pieces[target_square] = self.pieces[departure_square];
         self.pieces[departure_square] = Piece::None;
+
+        self.colour_to_move = !self.colour_to_move;
     }
 
     #[allow(dead_code)]
@@ -572,6 +570,15 @@ impl Board {
             };
 
             if special_one {
+                self.castling_rights = match self.colour_to_move {
+                    Colour::White => {
+                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanNotCastle
+                    }
+                    Colour::Black => {
+                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle
+                    }
+                };
+
                 self.pieces[castling_squares.0 as usize + 1] = Piece::None;
                 self.pieces[castling_squares.0 as usize + 2] = Piece::None;
                 self.pieces[castling_squares.0 as usize] = Piece::King | piece_colour;
@@ -579,6 +586,15 @@ impl Board {
             }
 
             if special_two {
+                self.castling_rights = match self.colour_to_move {
+                    Colour::White => {
+                        self.castling_rights >> 4 << 4 | CastlingRights::WhiteCanCastle
+                    }
+                    Colour::Black => {
+                        self.castling_rights << 4 >> 4 | CastlingRights::BlackCanCastle
+                    }
+                };
+
                 self.pieces[castling_squares.0 as usize - 1] = Piece::None;
                 self.pieces[castling_squares.0 as usize - 2] = Piece::None;
                 self.pieces[castling_squares.0 as usize - 3] = Piece::None;
