@@ -176,16 +176,12 @@ impl Board {
                 continue;
             }
 
-            let piece_color = Piece::colour_bool(piece);
-
-            if piece_color != self.colour_to_move {
+            if Piece::colour_bool(piece) != self.colour_to_move {
                 continue;
             }
 
-            let piece_type = Piece::piece_type(piece);
-
             if Piece::is_sliding_piece(piece) {
-                let (dir_start, dir_end) = match piece_type {
+                let (dir_start, dir_end) = match Piece::piece_type(piece) {
                     Piece::Queen => (0, 8),
                     Piece::Rook => (0, 4),
                     Piece::Bishop => (4, 8),
@@ -197,10 +193,6 @@ impl Board {
                     for n in 0..NUM_SQUARES_TO_EDGE[start_square][dir_index] {
                         let target_square =
                             start_square as i8 + DIRECTION_OFFSETS[dir_index] * (n as i8 + 1);
-
-                        if !(0..=63).contains(&target_square) {
-                            continue;
-                        }
 
                         let piece_on_target_square = self.pieces[target_square as usize];
 
@@ -220,7 +212,7 @@ impl Board {
                 continue;
             }
 
-            if Piece::is_type(piece_type, Piece::Knight) {
+            if Piece::is_type(piece, Piece::Knight) {
                 for n in KNIGHTS_OFFSETS {
                     let (start_file, start_rank) = square_to_coods(start_square as u16);
                     let target_file = start_file as i8 + n.0;
@@ -231,10 +223,6 @@ impl Board {
                     }
 
                     let target_square = target_rank * 8 + target_file;
-
-                    if !(0..=63).contains(&target_square) {
-                        continue;
-                    }
 
                     let piece_on_target_square = self.pieces[target_square as usize];
 
@@ -250,7 +238,7 @@ impl Board {
                 continue;
             }
 
-            if Piece::is_type(piece_type, Piece::King) {
+            if Piece::is_type(piece, Piece::King) {
                 #[allow(clippy::needless_range_loop)]
                 for dir_index in 0..8 {
                     if NUM_SQUARES_TO_EDGE[start_square][dir_index] == 0 {
@@ -258,10 +246,6 @@ impl Board {
                     }
 
                     let target_square = start_square as i8 + DIRECTION_OFFSETS[dir_index];
-
-                    if !(0..=63).contains(&target_square) {
-                        continue;
-                    }
 
                     let piece_on_target_square = self.pieces[target_square as usize];
 
@@ -276,7 +260,7 @@ impl Board {
                 continue;
             }
 
-            if Piece::is_type(piece_type, Piece::Pawn) {
+            if Piece::is_type(piece, Piece::Pawn) {
                 let direction_index = match self.colour_to_move {
                     Colour::White => 0,
                     Colour::Black => 1,
@@ -315,10 +299,6 @@ impl Board {
                     }
 
                     let target_square = start_square as i8 + DIRECTION_OFFSETS[n];
-
-                    if !(0..=63).contains(&target_square) {
-                        continue;
-                    }
 
                     let piece_on_target_square = self.pieces[target_square as usize];
 
@@ -426,9 +406,9 @@ impl Board {
                 return;
             }
 
-            let (king_file, king_rank) = match active_colour {
-                Colour::White => (4, 0),
-                Colour::Black => (4, 7),
+            let king_index = match active_colour {
+                Colour::White => 4,
+                Colour::Black => 60,
             };
 
             let move_record = MoveRecord {
@@ -447,7 +427,6 @@ impl Board {
                     }
                 };
 
-                let king_index = king_rank * 8 + king_file;
                 let king = self.pieces[king_index];
                 let rook = self.pieces[king_index + 3];
                 self.pieces[king_index] = Piece::None;
@@ -466,7 +445,6 @@ impl Board {
                     }
                 };
 
-                let king_index = king_rank * 8 + king_file;
                 let king = self.pieces[king_index];
                 let rook = self.pieces[king_index - 4];
                 self.pieces[king_index] = Piece::None;
@@ -530,7 +508,7 @@ impl Board {
                 let perspective = match perspective {
                     Colour::White => (7 - rank, file),
                     Colour::Black => (rank, 7 - file),
-                    _ => panic!("strigification: invalid perspective"),
+                    // _ => panic!("stringification: invalid perspective"),
                 };
 
                 let piece = self.pieces[perspective.0 * 8 + perspective.1];
