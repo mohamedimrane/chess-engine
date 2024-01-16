@@ -259,23 +259,6 @@ impl Board {
                     Colour::White => 0,
                     Colour::Black => 1,
                 };
-
-                // Forward move
-                if NUM_SQUARES_TO_EDGE[start_square][direction_index] == 0 {
-                    continue;
-                }
-
-                let target_square = start_square as i8 + DIRECTION_OFFSETS[direction_index];
-
-                let piece_on_target_square = self.pieces[target_square as usize];
-
-                if piece_on_target_square != Piece::None {
-                    continue;
-                }
-
-                let m_move = Move::new(start_square as u16, target_square as u16);
-                moves.push(m_move);
-
                 // Sideways capture
 
                 let capture_direction_indexes = match self.colour_to_move {
@@ -299,6 +282,22 @@ impl Board {
                     let m_move = Move::new(start_square as u16, target_square as u16);
                     moves.push(m_move);
                 }
+
+                // Forward move
+                if NUM_SQUARES_TO_EDGE[start_square][direction_index] == 0 {
+                    continue;
+                }
+
+                let target_square = start_square as i8 + DIRECTION_OFFSETS[direction_index];
+
+                let piece_on_target_square = self.pieces[target_square as usize];
+
+                if piece_on_target_square != Piece::None {
+                    continue;
+                }
+
+                let m_move = Move::new(start_square as u16, target_square as u16);
+                moves.push(m_move);
 
                 // Double forward move
 
