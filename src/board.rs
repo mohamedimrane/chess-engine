@@ -50,7 +50,7 @@ const KNIGHTS_OFFSETS: [(i8, i8); 8] = [
     (1, -2),
     (-1, -2),
 ];
-const CASTLING_SQUARES: (i8, i8) = (4, 60);
+const KING_SQUARE: (usize, usize) = (4, 60);
 
 pub struct Board {
     pieces: [u8; 64],
@@ -169,14 +169,8 @@ impl Board {
     pub fn generate_moves(&self) -> Vec<u16> {
         let mut moves = Vec::new();
 
-        for (start_square, piece) in self.pieces.iter().enumerate() {
-            let piece = *piece;
-
-            if piece == Piece::None {
-                continue;
-            }
-
-            if Piece::colour_bool(piece) != self.colour_to_move {
+        for (start_square, &piece) in self.pieces.iter().enumerate() {
+            if piece == Piece::None || Piece::colour_bool(piece) != self.colour_to_move {
                 continue;
             }
 
@@ -273,10 +267,6 @@ impl Board {
 
                 let target_square = start_square as i8 + DIRECTION_OFFSETS[direction_index];
 
-                if !(0..=63).contains(&target_square) {
-                    continue;
-                }
-
                 let piece_on_target_square = self.pieces[target_square as usize];
 
                 if piece_on_target_square != Piece::None {
@@ -336,16 +326,16 @@ impl Board {
             }
         }
 
-        let castling_squares = match self.colour_to_move {
-            Colour::White => CASTLING_SQUARES.0,
-            Colour::Black => CASTLING_SQUARES.1,
+        let castling_square = match self.colour_to_move {
+            Colour::White => KING_SQUARE.0,
+            Colour::Black => KING_SQUARE.1,
         };
 
         let castling_rights = CastlingRights::rights(self.castling_rights, self.colour_to_move);
 
         if CastlingRights::can_long_castle(castling_rights)
-            && self.pieces[castling_squares as usize - 2] == Piece::None
-            && self.pieces[castling_squares as usize - 3] == Piece::None
+            && self.pieces[castling_square - 2] == Piece::None
+            && self.pieces[castling_square - 3] == Piece::None
         {
             let v_move = Move::LongCastle;
 
@@ -353,8 +343,8 @@ impl Board {
         }
 
         if CastlingRights::can_short_castle(castling_rights)
-            && self.pieces[castling_squares as usize + 1] == Piece::None
-            && self.pieces[castling_squares as usize + 2] == Piece::None
+            && self.pieces[castling_square + 1] == Piece::None
+            && self.pieces[castling_square + 2] == Piece::None
         {
             let v_move = Move::ShortCastle;
 
@@ -397,8 +387,8 @@ impl Board {
             }
 
             let king_index = match self.colour_to_move {
-                Colour::White => 4,
-                Colour::Black => 60,
+                Colour::White => KING_SQUARE.0,
+                Colour::Black => KING_SQUARE.1,
             };
 
             let move_record = MoveRecord {
@@ -566,8 +556,8 @@ impl Board {
 
         if castling {
             let castling_square = match self.colour_to_move {
-                Colour::White => CASTLING_SQUARES.0,
-                Colour::Black => CASTLING_SQUARES.1,
+                Colour::White => KING_SQUARE.0,
+                Colour::Black => KING_SQUARE.1,
             };
 
             let piece_colour = match self.colour_to_move {
@@ -585,10 +575,10 @@ impl Board {
                     }
                 };
 
-                self.pieces[castling_square as usize + 1] = Piece::None;
-                self.pieces[castling_square as usize + 2] = Piece::None;
-                self.pieces[castling_square as usize] = Piece::King | piece_colour;
-                self.pieces[castling_square as usize + 3] = Piece::Rook | piece_colour;
+                self.pieces[castling_square + 1] = Piece::None;
+                self.pieces[castling_square + 2] = Piece::None;
+                self.pieces[castling_square] = Piece::King | piece_colour;
+                self.pieces[castling_square + 3] = Piece::Rook | piece_colour;
             }
 
             if special_two {
@@ -601,11 +591,11 @@ impl Board {
                     }
                 };
 
-                self.pieces[castling_square as usize - 1] = Piece::None;
-                self.pieces[castling_square as usize - 2] = Piece::None;
-                self.pieces[castling_square as usize - 3] = Piece::None;
-                self.pieces[castling_square as usize] = Piece::King | piece_colour;
-                self.pieces[castling_square as usize - 4] = Piece::Rook | piece_colour;
+                self.pieces[castling_square - 1] = Piece::None;
+                self.pieces[castling_square - 2] = Piece::None;
+                self.pieces[castling_square - 3] = Piece::None;
+                self.pieces[castling_square] = Piece::King | piece_colour;
+                self.pieces[castling_square - 4] = Piece::Rook | piece_colour;
             }
 
             return Ok(());
