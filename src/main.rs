@@ -1,4 +1,7 @@
-use std::io::BufRead;
+use std::{
+    error::Error,
+    io::{stdin, stdout, Write},
+};
 
 use errors::MoveError;
 use moves::Move;
@@ -14,41 +17,33 @@ mod errors;
 mod moves;
 mod piece;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     // let mut board = Board::from_fen("8/8/5N2/3N4/4Q3/2KR2R1/PPPPPPPP/7N w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/1p1p3/8/2P4/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/8/8/3pP2/8/8/8/8 w QKqk").unwrap();
     // let mut board = Board::from_fen("8/pppppppp/PPPP4/8/8/8/PPPPPPPP/8 w QKqk").unwrap();
-    // let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
-    let mut board = Board::from_fen("8/5ppp/p1p3P1/1P2P3/5p2/6p1/5PP1/8 w - - 0 1").unwrap();
+    let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk").unwrap();
+    // let mut board = Board::from_fen("8/5ppp/p1p3P1/1P2P3/5p2/6p1/5PP1/8 w - - 0 1").unwrap();
     // let mut board = Board::from_fen("7b/1r2N1pp/3k4/Q7/3n3K/2p5/R1PP4/1n1q1B2 w -").unwrap();
     // let mut board = Board::from_fen("r3k2r/p6p/P6P/8/8/p6p/P6P/R3K2R w KQkq").unwrap();
 
-    for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
+    // for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
+    loop {
         let moves = board.generate_moves();
 
-        let line_split = line.split_once(' ');
+        let line = get_line()?;
 
-        let verb;
-        let mut args = Vec::new();
+        let (command, args) = process_line(line);
 
-        match line_split {
-            None => verb = line.as_str(),
-            Some(line_split) => {
-                verb = line_split.0;
-                args = line_split.1.split_whitespace().collect();
-            }
-        }
-
-        match verb {
+        match command.as_str() {
             "" => {}
 
             "listmoves" | "list" | "moves" | "ls" => {
                 println!(
                     "{} {:?}",
                     format!("moves ({}):", moves.len()).green(),
-                    moves.iter().map(|m| repr_move(*m)).collect::<Vec<_>>()
+                    moves.iter().map(|&m| repr_move(m)).collect::<Vec<_>>()
                 );
             }
 
@@ -74,14 +69,15 @@ fn main() {
             }
 
             "play" | "move" => 'blk: {
-                // let command_strs = line.split_whitespace().collect::<Vec<_>>();
-
-                // let move_str = command_strs[1].to_string();
+                let Some(args) = args else {
+                    println!("{}", "not enough arguments: no move provided".red());
+                    break 'blk;
+                };
 
                 let move_str = match args.first() {
-                    Some(m) => *m,
+                    Some(m) => m,
                     None => {
-                        println!("{}", "arg error: no move provided".red());
+                        println!("{}", "args error: cannot get arg".red());
                         break 'blk;
                     }
                 };
@@ -89,32 +85,52 @@ fn main() {
                 let move_err = make_move(move_str, &moves, &mut board);
                 if let Err(e) = move_err {
                     println!("{} ({:?}): {}", "invalid move".red(), e, move_str);
-                    // match e {
-                    //     MoveError::InvalidMove => {
-                    //         println!("{} {}", "invalid move:".red(), move_str);
-                    //     }
-                    //     MoveError::MissingSquares => {
-                    //         println!("{} {}", "missing squares: ".red(), move_str);
-                    //     }
-                    //     MoveError::InvalidFile => {
-                    //         println!("{} {}", "invalid file: ".red(), move_str);
-                    //     }
-                    //     MoveError::InvalidRank => {
-                    //         println!("{} {}", "invalid rank: ".red(), move_str);
-                    //     }
-                    // };
-
                     break 'blk;
                 }
             }
 
             _ => {
-                println!("{} {}", "invalid command:".red(), line);
+                println!("{} {}", "invalid command:".red(), command);
             }
         }
-
-        print!("\n{}\n\n", "-".repeat(60));
     }
+}
+
+fn get_line() -> Result<String, Box<dyn Error>> {
+    print!("> ");
+    stdout().flush()?;
+
+    let mut line = String::new();
+    stdin().read_line(&mut line)?;
+    if let Some('\n') = line.chars().next_back() {
+        line.pop();
+    }
+    if let Some('\r') = line.chars().next_back() {
+        line.pop();
+    }
+
+    Ok(line)
+}
+
+fn process_line(line: String) -> (String, Option<Vec<String>>) {
+    let command;
+    let mut args = None;
+
+    match line.split_once(' ') {
+        None => command = line.trim().to_string(),
+        Some(line_split) => {
+            command = line_split.0.trim().to_string();
+            args = Some(
+                line_split
+                    .1
+                    .split_whitespace()
+                    .map(|arg| arg.trim().to_string())
+                    .collect(),
+            );
+        }
+    }
+
+    (command, args)
 }
 
 fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), MoveError> {
