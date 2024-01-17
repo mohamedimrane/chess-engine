@@ -158,37 +158,32 @@ fn process_move(string: &str) -> Result<u16, MoveError> {
 
     let chars: Vec<char> = string.chars().collect();
 
-    let departure_file = chars.get(0);
-    let departure_rank = chars.get(1);
-    let target_file = chars.get(2);
-    let target_rank = chars.get(3);
+    #[allow(clippy::get_first)]
+    let departure_file = match chars.get(0) {
+        Some(x) if x.is_alphabetic() => get_file_number(*x)?,
+        _ => return Err(MoveError::InvalidFile),
+    };
+    let target_file = match chars.get(2) {
+        Some(x) if x.is_alphabetic() => get_file_number(*x)?,
+        _ => return Err(MoveError::InvalidFile),
+    };
+    let departure_rank = match chars.get(1) {
+        Some(x) if x.is_ascii_digit() => x
+            .to_digit(10)
+            .expect("failed converting departure rank to number"),
+        _ => return Err(MoveError::InvalidRank),
+    } as u16
+        - 1;
+    let target_rank = match chars.get(3) {
+        Some(x) if x.is_ascii_digit() => x
+            .to_digit(10)
+            .expect("failed converting target rank to number"),
+        _ => return Err(MoveError::InvalidRank),
+    } as u16
+        - 1;
 
-    if departure_file.is_none()
-        || departure_rank.is_none()
-        || target_file.is_none()
-        || target_rank.is_none()
-    {
-        return Err(MoveError::MissingSquares);
-    }
-
-    let departure_file = get_file_number(*departure_file.unwrap());
-    let target_file = get_file_number(*target_file.unwrap());
-
-    if let (None, None) = (departure_file, target_file) {
-        return Err(MoveError::InvalidRank);
-    }
-
-    let departure_rank = departure_rank.unwrap().to_digit(10);
-    let target_rank = target_rank.unwrap().to_digit(10);
-    if let (None, None) = (departure_rank, target_rank) {
-        return Err(MoveError::InvalidRank);
-    }
-
-    let departure_rank = departure_rank.unwrap() as u16 - 1;
-    let target_rank = target_rank.unwrap() as u16 - 1;
-
-    let departure_square = departure_rank * 8 + departure_file.unwrap();
-    let target_square = target_rank * 8 + target_file.unwrap();
+    let departure_square = departure_rank * 8 + departure_file;
+    let target_square = target_rank * 8 + target_file;
 
     Ok(departure_square | target_square << 6)
 }
@@ -208,9 +203,9 @@ fn repr_move(v_move: u16) -> String {
     let (target_file, target_rank) = square_to_coods(target_square);
     format!(
         "{}{}{}{}",
-        get_file_letter(departure_file),
+        get_file_letter(departure_file).unwrap(),
         departure_rank + 1,
-        get_file_letter(target_file),
+        get_file_letter(target_file).unwrap(),
         target_rank + 1
     )
 }
@@ -223,13 +218,17 @@ fn square_to_coods(square: u16) -> (u16, u16) {
 }
 
 const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-fn get_file_letter(file: u16) -> char {
-    FILE_LETTERS[file as usize]
+fn get_file_letter(file: u16) -> Result<char, MoveError> {
+    FILE_LETTERS
+        .get(file as usize)
+        .copied()
+        .ok_or(MoveError::InvalidFile)
 }
 
-fn get_file_number(file: char) -> Option<u16> {
+fn get_file_number(file: char) -> Result<u16, MoveError> {
     FILE_LETTERS
         .iter()
         .position(|&a| a == file)
         .map(|x| x as u16)
+        .ok_or(MoveError::InvalidFile)
 }
