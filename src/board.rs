@@ -93,78 +93,102 @@ impl Board {
     }
 
     pub fn from_fen(fen: &str) -> Result<Self, FenError> {
-        let splited_fen: Vec<&str> = fen.split(' ').collect();
-        let mut board = Self::default();
+        let splited_fen = fen.split_whitespace().collect::<Vec<_>>();
 
-        board.colour_to_move = match splited_fen[1] {
+        use FenError::NotEnoughParts as FENotEnoughParts;
+        let board_seg = splited_fen.get(0).copied().ok_or(FENotEnoughParts)?;
+        let colour_to_move_seg = splited_fen.get(1).copied().ok_or(FENotEnoughParts)?;
+        let castling_rights_seg = splited_fen.get(2).copied().ok_or(FENotEnoughParts)?;
+        let en_passant_squage_seg = splited_fen.get(3).copied().ok_or(FENotEnoughParts)?;
+        let halfmove_clock_seg = splited_fen.get(4).copied().ok_or(FENotEnoughParts)?;
+        let fullmove_number_seg = splited_fen.get(5).copied().ok_or(FENotEnoughParts)?;
+
+        let colour_to_move = match colour_to_move_seg {
             "w" => Colour::White,
             "b" => Colour::Black,
-            _ => return Err(FenError::InvalidColor),
+            _ => return Err(FenError::NoSuchSide(colour_to_move_seg)),
         };
 
-        for right in splited_fen[2].chars() {
-            board.castling_rights |= match right {
-                'K' => CastlingRights::WhiteCanShortCastle,
-                'Q' => CastlingRights::WhiteCanLongCastle,
-                'k' => CastlingRights::BlackCanShortCastle,
-                'q' => CastlingRights::BlackCanLongCastle,
-                '-' => {
-                    board.castling_rights =
-                        CastlingRights::WhiteCanNotCastle | CastlingRights::BlackCanNotCastle;
-                    break;
+        use CastlingRights as CR;
+        let castling_rights =
+            castling_rights_seg
+                .chars()
+                .try_fold(CR::CanNotCastle, |sum, val| match val {
+                    'K' => Ok(sum | CR::WhiteCanShortCastle),
+                    'Q' => Ok(sum | CR::WhiteCanLongCastle),
+                    'k' => Ok(sum | CR::BlackCanShortCastle),
+                    'q' => Ok(sum | CR::BlackCanLongCastle),
+                    '-' => Ok(sum),
+                    _ => Err(FenError::BadCastlingCharacter(castling_rights_seg)),
+                })?;
+
+        let mut pieces = [0u8; 64];
+        for (rank, mut rank_chars) in board_seg.split('/').map(|rank| rank.chars()).enumerate() {
+            let mut file = 0usize;
+
+            while file < 8 {
+                let c = rank_chars.next().unwrap();
+
+                if let Some(n) = c.to_digit(10) {
+                    file += n as usize;
+                    continue;
                 }
-                _ => return Err(FenError::InvalidCastlingCharacter),
-            }
-        }
 
-        let pieces = splited_fen[0].chars();
-        let mut file: usize = 0;
-        let mut rank: usize = 0;
-        for c in pieces {
-            if c == '/' {
-                rank += 1;
-                file = 0;
-
-                if rank > 8 {
-                    return Err(FenError::RankTooBig(rank));
-                }
-                continue;
-            }
-
-            if c.is_numeric() {
-                let num = c.to_digit(10).unwrap() as usize;
-                if num + file > 8 {
-                    return Err(FenError::FileTooBig(num));
-                }
-                file += num;
-                continue;
-            }
-
-            if c.is_alphabetic() {
-                let color = match c {
-                    c if c.is_uppercase() => Piece::White,
-                    c if c.is_lowercase() => Piece::Black,
-                    _ => return Err(FenError::CharNotReconized),
+                let colour = if c.is_uppercase() {
+                    Piece::White
+                } else {
+                    Piece::Black
                 };
 
-                let kind = match c.to_lowercase().next().unwrap() {
+                let kind = match c.to_ascii_lowercase() {
                     'p' => Piece::Pawn,
                     'n' => Piece::Knight,
                     'b' => Piece::Bishop,
                     'r' => Piece::Rook,
                     'q' => Piece::Queen,
                     'k' => Piece::King,
-                    _ => return Err(FenError::CharNotReconized),
+                    _ => return Err(FenError::UnknownPiece(c)),
                 };
 
-                board.pieces[(7 - rank) * 8 + file] = color | kind;
+                let piece = colour | kind;
+
+                pieces[(7 - rank) * 8 + file] = piece;
+
                 file += 1;
-                continue;
             }
         }
 
+        let board = Board {
+            pieces,
+            colour_to_move,
+            castling_rights,
+            move_history: Vec::new(),
+        };
+
         Ok(board)
     }
+
+    // let colour = if file_str.is_uppercase() {
+    //     Piece::White
+    // } else {
+    //     Piece::Black
+    // };
+
+    // let kind = match file_str.to_ascii_lowercase() {
+    //     'p' => Piece::Pawn,
+    //     'n' => Piece::Knight,
+    //     'b' => Piece::Bishop,
+    //     'r' => Piece::Rook,
+    //     'q' => Piece::Queen,
+    //     'k' => Piece::King,
+    //     _ => return Err(FenError::CharNotReconized),
+    // };
+
+    // let piece = colour | kind;
+
+    // pieces[rank * 8 + file] = piece;
+
+    // file += 1;
 
     pub fn generate_moves(&self) -> Vec<u16> {
         let mut moves = Vec::new();
