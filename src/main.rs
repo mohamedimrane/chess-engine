@@ -19,8 +19,9 @@ mod piece;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk - 0 1").unwrap();
-    let mut board =
-        Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1").unwrap();
+    // let mut board =
+    //     Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1").unwrap();
+    let mut board = Board::new();
     // let mut board = Board::from_fen("8/5ppp/p1p3P1/1P2P3/5p2/6p1/5PP1/8 w - - 0 1").unwrap();
     // let mut board = Board::from_fen("r3k2r/p6p/P6P/8/8/p6p/P6P/R3K2R w KQkq - 0 1").unwrap();
 
@@ -34,6 +35,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         match command.as_str() {
             "" => {}
+
+            "ep" => {
+                println!("{:?}", board.en_passant_square);
+            }
 
             "listmoves" | "list" | "moves" | "ls" => {
                 println!(
@@ -130,7 +135,7 @@ fn process_line(line: String) -> (String, Option<Vec<String>>) {
 }
 
 fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), MoveError> {
-    let v_move = process_move(move_string)?;
+    let v_move = process_move(move_string, board)?;
 
     if !moves.contains(&v_move) {
         return Err(MoveError::InvalidMove);
@@ -143,7 +148,7 @@ fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), 
     Ok(())
 }
 
-fn process_move(string: &str) -> Result<u16, MoveError> {
+fn process_move(string: &str, board: &Board) -> Result<u16, MoveError> {
     if string == "o-o" || string == "O-O" || string == "0-0" {
         return Ok(Move::ShortCastle);
     }
@@ -178,10 +183,31 @@ fn process_move(string: &str) -> Result<u16, MoveError> {
     } as u16
         - 1;
 
+    let double_forward_pawn_move_flag = match chars.get(4) {
+        Some(&x) => {
+            if x == '*' {
+                Move::DoubleForwardPawnMove
+            } else {
+                0
+            }
+        }
+        None => 0,
+    };
+
+    // let second_rank = match colour {
+    //     Colour::White => (8, 15),
+    //     Colour::Black => (47, 55),
+    // };
+
     let departure_square = departure_rank * 8 + departure_file;
     let target_square = target_rank * 8 + target_file;
+    // let flags = if pie
 
-    Ok(departure_square | target_square << 6)
+    // if !(second_rank.0..=second_rank.1).contains(&start_square) {
+    //     continue;
+    // }
+
+    Ok(departure_square | target_square << 6 | double_forward_pawn_move_flag)
 }
 
 fn repr_move(v_move: u16) -> String {
@@ -197,12 +223,18 @@ fn repr_move(v_move: u16) -> String {
     let target_square = (v_move & 0b111111000000) >> 6;
     let (departure_file, departure_rank) = square_to_coods(departure_square);
     let (target_file, target_rank) = square_to_coods(target_square);
+    let double_forward_pawn_move = if Move::is_double_forward_pawn_move(v_move) {
+        "*"
+    } else {
+        ""
+    };
     format!(
-        "{}{}{}{}",
+        "{}{}{}{}{}",
         get_file_letter(departure_file).unwrap(),
         departure_rank + 1,
         get_file_letter(target_file).unwrap(),
-        target_rank + 1
+        target_rank + 1,
+        double_forward_pawn_move
     )
 }
 

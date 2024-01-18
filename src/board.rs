@@ -54,8 +54,9 @@ const KING_SQUARE: (usize, usize) = (4, 60);
 
 pub struct Board {
     pieces: [u8; 64],
-    colour_to_move: bool,
+    pub colour_to_move: bool,
     castling_rights: u8,
+    pub en_passant_square: Option<u8>,
     move_history: Vec<MoveRecord>,
 }
 
@@ -162,7 +163,7 @@ impl Board {
             pieces,
             colour_to_move,
             castling_rights,
-            move_history: Vec::new(),
+            ..Default::default()
         };
 
         Ok(board)
@@ -342,7 +343,8 @@ impl Board {
                     continue;
                 }
 
-                let m_move = Move::new(start_square as u16, target_square as u16);
+                let m_move = Move::new(start_square as u16, target_square as u16)
+                    | Move::DoubleForwardPawnMove;
                 moves.push(m_move);
 
                 continue;
@@ -476,6 +478,12 @@ impl Board {
                 Colour::Black => self.castling_rights << 4 >> 4 | CastlingRights::BlackCanNotCastle,
             };
         }
+
+        self.en_passant_square = if Move::is_double_forward_pawn_move(v_move) {
+            Some((target_square as i8 + DIRECTION_OFFSETS[1]) as u8)
+        } else {
+            None
+        };
 
         self.pieces[target_square] = self.pieces[departure_square];
         self.pieces[departure_square] = Piece::None;
@@ -637,6 +645,7 @@ impl Default for Board {
             pieces: [0; 64],
             colour_to_move: Colour::White,
             castling_rights: CastlingRights::WhiteCanCastle | CastlingRights::BlackCanCastle,
+            en_passant_square: None,
             move_history: Vec::new(),
         }
     }
