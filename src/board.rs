@@ -295,8 +295,8 @@ impl Board {
                 // Sideways capture
 
                 let capture_direction_indexes = match self.colour_to_move {
-                    Colour::White => [4, 6],
-                    Colour::Black => [5, 7],
+                    Colour::White => [NORTH_WEST, NORTH_EAST],
+                    Colour::Black => [SOUTH_EAST, SOUTH_WEST],
                 };
 
                 for n in capture_direction_indexes {
@@ -308,12 +308,18 @@ impl Board {
 
                     let piece_on_target_square = self.pieces[target_square as usize];
 
-                    if !Piece::is_colour_bool(piece_on_target_square, !self.colour_to_move) {
+                    if piece_on_target_square == Piece::None {
+                        if let Some(en_passant_square) = self.en_passant_square {
+                            if target_square as u8 == en_passant_square {
+                                let m_move = Move::new(start_square as u16, target_square as u16);
+                                moves.push(m_move);
+                            }
+                        }
+                    } else if Piece::is_colour_bool(piece_on_target_square, !self.colour_to_move) {
+                        let m_move = Move::new(start_square as u16, target_square as u16);
+                        moves.push(m_move);
                         continue;
                     }
-
-                    let m_move = Move::new(start_square as u16, target_square as u16);
-                    moves.push(m_move);
                 }
 
                 // Forward move
@@ -488,17 +494,20 @@ impl Board {
         }
 
         let colour_index = match self.colour_to_move {
-            Colour::White => 1,
-            Colour::Black => -1,
+            Colour::White => DIRECTION_OFFSETS[SOUTH],
+            Colour::Black => DIRECTION_OFFSETS[NORTH],
         };
 
         self.en_passant_square = if Move::is_double_forward_pawn_move(v_move) {
-            Some((target_square as i8 + DIRECTION_OFFSETS[SOUTH] * colour_index) as u8)
+            Some((target_square as i8 + colour_index) as u8)
         } else {
             None
         };
 
         self.pieces[target_square] = self.pieces[departure_square];
+        // if Move::is_double_forward_pawn_move(v_move) {
+        //     self.pieces[(target_square as i8 + colour_index) as usize] = Piece::None;
+        // }
         self.pieces[departure_square] = Piece::None;
 
         self.colour_to_move = !self.colour_to_move;

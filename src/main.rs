@@ -21,8 +21,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk - 0 1").unwrap();
     // let mut board =
     //     Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1").unwrap();
-    let mut board = Board::new();
+    // let mut board = Board::new();
     // let mut board = Board::from_fen("8/5ppp/p1p3P1/1P2P3/5p2/6p1/5PP1/8 w - - 0 1").unwrap();
+    let mut board = Board::from_fen("8/3p1ppp/p1p3P1/1P2P3/2p2p2/6p1/1P3PP1/8 w - - 0 1").unwrap();
     // let mut board = Board::from_fen("r3k2r/p6p/P6P/8/8/p6p/P6P/R3K2R w KQkq - 0 1").unwrap();
 
     // for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
