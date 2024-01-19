@@ -487,8 +487,13 @@ impl Board {
             };
         }
 
+        let colour_index = match self.colour_to_move {
+            Colour::White => 1,
+            Colour::Black => -1,
+        };
+
         self.en_passant_square = if Move::is_double_forward_pawn_move(v_move) {
-            Some((target_square as i8 + DIRECTION_OFFSETS[SOUTH]) as u8)
+            Some((target_square as i8 + DIRECTION_OFFSETS[SOUTH] * colour_index) as u8)
         } else {
             None
         };
