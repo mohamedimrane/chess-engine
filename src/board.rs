@@ -39,6 +39,14 @@ lazy_static! {
     };
 }
 
+const NORTH: usize = 0;
+const SOUTH: usize = 1;
+const WEST: usize = 2;
+const EAST: usize = 3;
+const NORTH_WEST: usize = 4;
+const SOUTH_EAST: usize = 5;
+const NORTH_EAST: usize = 6;
+const SOUTH_WEST: usize = 7;
 const DIRECTION_OFFSETS: [i8; 8] = [8, -8, -1, 1, 7, -7, 9, -9];
 const KNIGHTS_OFFSETS: [(i8, i8); 8] = [
     (2, 1),
@@ -480,7 +488,7 @@ impl Board {
         }
 
         self.en_passant_square = if Move::is_double_forward_pawn_move(v_move) {
-            Some((target_square as i8 + DIRECTION_OFFSETS[1]) as u8)
+            Some((target_square as i8 + DIRECTION_OFFSETS[SOUTH]) as u8)
         } else {
             None
         };
