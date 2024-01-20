@@ -311,7 +311,8 @@ impl Board {
                     if piece_on_target_square == Piece::None {
                         if let Some(en_passant_square) = self.en_passant_square {
                             if target_square as u8 == en_passant_square {
-                                let m_move = Move::new(start_square as u16, target_square as u16);
+                                let m_move = Move::new(start_square as u16, target_square as u16)
+                                    | Move::EnPassant;
                                 moves.push(m_move);
                             }
                         }
@@ -506,9 +507,9 @@ impl Board {
             };
 
         self.pieces[target_square] = self.pieces[departure_square];
-        // if Move::is_double_forward_pawn_move(v_move) {
-        //     self.pieces[(target_square as i8 + colour_index) as usize] = Piece::None;
-        // }
+        if Move::is_en_passant(v_move) {
+            self.pieces[(target_square as i8 + colour_index) as usize] = Piece::None;
+        }
         self.pieces[departure_square] = Piece::None;
 
         self.colour_to_move = !self.colour_to_move;

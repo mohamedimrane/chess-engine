@@ -24,7 +24,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     //     Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1").unwrap();
     // let mut board = Board::new();
     // let mut board = Board::from_fen("8/5ppp/p1p3P1/1P2P3/5p2/6p1/5PP1/8 w - - 0 1").unwrap();
-    let mut board = Board::from_fen("8/3p1ppp/p1p3P1/1P2P3/2p2p2/6p1/1P3PP1/8 w - - 0 1").unwrap();
+    let mut board =
+        Board::from_fen("8/3p1ppp/p1p3P1/1PP1P3/p1p2p2/6p1/1P3PP1/8 w - - 0 1").unwrap();
     // let mut board = Board::from_fen("r3k2r/p6p/P6P/8/8/p6p/P6P/R3K2R w KQkq - 0 1").unwrap();
 
     // for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
@@ -192,18 +193,8 @@ fn process_move(string: &str, board: &Board) -> Result<u16, MoveError> {
         None => 0,
     };
 
-    // let second_rank = match colour {
-    //     Colour::White => (8, 15),
-    //     Colour::Black => (47, 55),
-    // };
-
     let departure_square = departure_rank * 8 + departure_file;
     let target_square = target_rank * 8 + target_file;
-    // let flags = if pie
-
-    // if !(second_rank.0..=second_rank.1).contains(&start_square) {
-    //     continue;
-    // }
 
     Ok(departure_square | target_square << 6 | en_passant_flag)
 }
