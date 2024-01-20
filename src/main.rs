@@ -8,7 +8,8 @@ use moves::Move;
 
 use crate::{board::Board, colour::Colour};
 
-use colored::*;
+// use colored::*;
+use color_print::cprintln;
 
 mod board;
 mod castling_rights;
@@ -38,61 +39,59 @@ fn main() -> Result<(), Box<dyn Error>> {
             "" => {}
 
             "ep" => {
-                println!("{:?}", board.en_passant_square);
+                cprintln!("<green>en passant square:</> {:?}", board.en_passant_square);
             }
 
             "listmoves" | "list" | "moves" | "ls" => {
-                println!(
-                    "{} {:?}",
-                    format!("moves ({}):", moves.len()).green(),
-                    moves.iter().map(|&m| repr_move(m)).collect::<Vec<_>>()
-                );
+                let moves_list = moves.iter().map(|&m| repr_move(m)).collect::<Vec<_>>();
+                cprintln!("<green>moves ({}):</> {:?}", moves.len(), moves_list);
             }
 
             "show" | "display" | "board" => {
-                println!("{}", board.stringify(Colour::White));
+                cprintln!("{}", board.stringify(Colour::White));
             }
 
             "unmake" | "undo" => {
                 if let Err(e) = board.undo_move() {
-                    println!("{}{:?}", "cannot undo: ".red(), e);
+                    cprintln!("<red>cannot undo:</> {:?}", e);
                 }
             }
 
             "eval" | "evaluate" | "evaluation" => {
-                let eval_string = match board.evaluate() {
-                    n if n == 0 => "0".normal(),
-                    n if n > 0 => format!("{}", n).bright_green(),
-                    n if n < 0 => format!("{}", n).bright_red(),
-                    _ => unreachable!(),
+                let eval = board.evaluate();
+                let eval_string = if eval > 0 {
+                    "+".to_string() + &eval.to_string()
+                } else {
+                    eval.to_string()
                 };
 
-                println!("{}", format!("evaluation: {}", eval_string).green());
+                cprintln!("<green>evaluation:</> <bold, blue>{}</>", eval_string);
             }
 
             "play" | "move" => 'blk: {
                 let Some(args) = args else {
-                    println!("{}", "not enough arguments: no move provided".red());
+                    cprintln!("<red>not enough arguments: no move provided</>");
                     break 'blk;
                 };
 
                 let move_str = match args.first() {
                     Some(m) => m,
                     None => {
-                        println!("{}", "args error: cannot get arg".red());
+                        cprintln!("<red>args error: cannot get arg</>");
                         break 'blk;
                     }
                 };
 
                 let move_err = make_move(move_str, &moves, &mut board);
                 if let Err(e) = move_err {
-                    println!("{} ({:?}): {}", "invalid move".red(), e, move_str);
+                    cprintln!("<red>invalid move</> ({:?}): {}", e, move_str);
                     break 'blk;
                 }
+                cprintln!("<green>played move:</> {}", move_str);
             }
 
             _ => {
-                println!("{} {}", "invalid command:".red(), command);
+                cprintln!("<red>invalid command:</> {}", command);
             }
         }
     }
@@ -143,8 +142,6 @@ fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), 
     }
 
     board.make_move(v_move);
-
-    println!("{} {}", "played move:".green(), move_string);
 
     Ok(())
 }
