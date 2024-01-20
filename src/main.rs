@@ -181,10 +181,10 @@ fn process_move(string: &str, board: &Board) -> Result<u16, MoveError> {
     } as u16
         - 1;
 
-    let double_forward_pawn_move_flag = match chars.get(4) {
+    let en_passant_flag = match chars.get(4) {
         Some(&x) => {
             if x == '*' {
-                Move::DoubleForwardPawnMove
+                Move::EnPassant
             } else {
                 0
             }
@@ -205,7 +205,7 @@ fn process_move(string: &str, board: &Board) -> Result<u16, MoveError> {
     //     continue;
     // }
 
-    Ok(departure_square | target_square << 6 | double_forward_pawn_move_flag)
+    Ok(departure_square | target_square << 6 | en_passant_flag)
 }
 
 fn repr_move(v_move: u16) -> String {
@@ -221,18 +221,14 @@ fn repr_move(v_move: u16) -> String {
     let target_square = (v_move & 0b111111000000) >> 6;
     let (departure_file, departure_rank) = square_to_coods(departure_square);
     let (target_file, target_rank) = square_to_coods(target_square);
-    let double_forward_pawn_move = if Move::is_double_forward_pawn_move(v_move) {
-        "*"
-    } else {
-        ""
-    };
+    let en_passant = if Move::is_en_passant(v_move) { "*" } else { "" };
     format!(
         "{}{}{}{}{}",
         get_file_letter(departure_file).unwrap(),
         departure_rank + 1,
         get_file_letter(target_file).unwrap(),
         target_rank + 1,
-        double_forward_pawn_move
+        en_passant
     )
 }
 

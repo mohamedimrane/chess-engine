@@ -357,8 +357,7 @@ impl Board {
                     continue;
                 }
 
-                let m_move = Move::new(start_square as u16, target_square as u16)
-                    | Move::DoubleForwardPawnMove;
+                let m_move = Move::new(start_square as u16, target_square as u16);
                 moves.push(m_move);
 
                 continue;
@@ -498,11 +497,13 @@ impl Board {
             Colour::Black => DIRECTION_OFFSETS[NORTH],
         };
 
-        self.en_passant_square = if Move::is_double_forward_pawn_move(v_move) {
-            Some((target_square as i8 + colour_index) as u8)
-        } else {
-            None
-        };
+        let is_two_rank_movement = ((target_square as i8 - departure_square as i8) / 8).abs() == 2;
+        self.en_passant_square =
+            if Piece::is_type(self.pieces[departure_square], Piece::Pawn) && is_two_rank_movement {
+                Some((target_square as i8 + colour_index) as u8)
+            } else {
+                None
+            };
 
         self.pieces[target_square] = self.pieces[departure_square];
         // if Move::is_double_forward_pawn_move(v_move) {

@@ -17,12 +17,12 @@ impl Move {
     pub const ShortCastle: u16 = 0b0100000000000000;
     pub const LongCastle: u16 = 0b1000000000000000;
 
-    pub const DoubleForwardPawnMove: u16 = 0b0001000000000000;
+    pub const EnPassant: u16 = 0b0001000000000000;
 
     pub const DEPARTURE_SQUARE_MASK: u16 = 0b0000000000111111;
     pub const TARGET_SQUARE_MASK: u16 = 0b0000111111000000;
 
-    pub const DOUBLE_FORWARD_PAWN_MOVE_MASK: u16 = 0b0001000000000000;
+    pub const EN_PASSANT_MASK: u16 = 0b0001000000000000;
 
     pub const PROMOTION_MASK: u16 = 0b0010000000000000;
 
@@ -60,8 +60,8 @@ impl Move {
     //     ((v_move & Self::target_rank_mask) >> 9) as u8
     // }
 
-    pub fn is_double_forward_pawn_move(v_move: u16) -> bool {
-        (v_move & Self::DOUBLE_FORWARD_PAWN_MOVE_MASK) == Self::DoubleForwardPawnMove
+    pub fn is_en_passant(v_move: u16) -> bool {
+        (v_move & Self::EN_PASSANT_MASK) == Self::EnPassant
     }
 
     pub fn is_promotion(v_move: u16) -> bool {
