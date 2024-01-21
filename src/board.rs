@@ -63,9 +63,9 @@ const KING_SQUARE: (usize, usize) = (4, 60);
 
 pub struct Board {
     pieces: [u8; 64],
-    pub colour_to_move: bool,
+    colour_to_move: bool,
     castling_rights: u8,
-    pub en_passant_square: Option<u8>,
+    en_passant_square: Option<u8>,
     move_history: Vec<MoveRecord>,
 }
 
@@ -661,6 +661,18 @@ impl Board {
         self.pieces[target_square] = move_record.piece_on_target_square;
 
         Ok(())
+    }
+
+    pub fn get_colour_to_move(&self) -> bool {
+        self.colour_to_move
+    }
+
+    pub fn get_en_passant_square(&self) -> Option<u8> {
+        self.en_passant_square
+    }
+
+    pub fn get_castling_rights(&self) -> u8 {
+        self.castling_rights
     }
 }
 

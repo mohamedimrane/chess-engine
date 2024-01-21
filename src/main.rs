@@ -9,6 +9,7 @@ use utils::{get_file_number, string_to_square};
 
 use crate::{
     board::Board,
+    castling_rights::CastlingRights,
     colour::Colour,
     utils::{get_file_letter, square_to_coods},
 };
@@ -30,10 +31,10 @@ fn main() -> Result<()> {
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk - 0 1").unwrap();
     // let mut board =
     //     Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1").unwrap();
-    // let mut board = Board::new();
+    let mut board = Board::new();
     // let mut board = Board::from_fen("8/5ppp/p1p3P1/1P2P3/5p2/6p1/5PP1/8 w - - 0 1").unwrap();
-    let mut board =
-        Board::from_fen("8/3p1ppp/p1p3P1/1PP1P3/p1p2p2/6p1/1P3PP1/8 w - - 0 1").unwrap();
+    // let mut board =
+    // Board::from_fen("8/3p1ppp/p1p3P1/1PP1P3/p1p2p2/6p1/1P3PP1/8 w - - 0 1").unwrap();
     // let mut board = Board::from_fen("r3k2r/p6p/P6P/8/8/p6p/P6P/R3K2R w KQkq - 0 1").unwrap();
 
     // for line in std::io::stdin().lock().lines().map(|r| r.unwrap()) {
@@ -48,7 +49,49 @@ fn main() -> Result<()> {
             "" => {}
 
             "ep" => {
-                cprintln!("<green>en passant square:</> {:?}", board.en_passant_square);
+                cprintln!(
+                    "<green>en passant square:</> {:?}",
+                    board.get_en_passant_square()
+                );
+            }
+
+            "ctm" | "colour" => {
+                let colour = match board.get_colour_to_move() {
+                    Colour::White => "white",
+                    Colour::Black => "black",
+                };
+
+                cprintln!("<green>colour to move:</> {}", colour);
+            }
+
+            "cr" | "castling" | "castlingrights" => {
+                use CastlingRights as CR;
+
+                let crs = board.get_castling_rights();
+
+                let white_rights = CR::rights(crs, Colour::White);
+                let black_rights = CR::rights(crs, Colour::Black);
+
+                let mut cr_string = String::new();
+
+                if CR::can_short_castle(white_rights) {
+                    cr_string.push('K');
+                }
+                if CR::can_long_castle(white_rights) {
+                    cr_string.push('Q');
+                }
+                if CR::can_short_castle(black_rights) {
+                    cr_string.push('k');
+                }
+                if CR::can_long_castle(black_rights) {
+                    cr_string.push('q');
+                }
+
+                if cr_string.is_empty() {
+                    cr_string = "None".to_string();
+                }
+
+                cprintln!("<green>castling rights:</> {}", cr_string);
             }
 
             "listmoves" | "list" | "moves" | "ls" => {
