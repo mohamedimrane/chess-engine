@@ -3,9 +3,9 @@ use std::{
     io::{stdin, stdout, Write},
 };
 
-use errors::MoveError;
+use errors::{MoveError, SquareParsingError};
 use moves::Move;
-use utils::get_file_number;
+use utils::{get_file_number, string_to_square};
 
 use crate::{
     board::Board,
@@ -144,7 +144,7 @@ fn process_line(line: String) -> (String, Option<Vec<String>>) {
 }
 
 fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<()> {
-    let v_move = process_move(move_string, board)?;
+    let v_move = process_move(move_string)?;
 
     if !moves.contains(&v_move) {
         return Err(Box::new(MoveError::InvalidMove));
@@ -155,7 +155,7 @@ fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<()> 
     Ok(())
 }
 
-fn process_move(string: &str, board: &Board) -> Result<u16> {
+fn process_move(string: &str) -> Result<u16> {
     if string == "o-o" || string == "O-O" || string == "0-0" {
         return Ok(Move::ShortCastle);
     }
@@ -164,35 +164,20 @@ fn process_move(string: &str, board: &Board) -> Result<u16> {
         return Ok(Move::LongCastle);
     }
 
-    let chars: Vec<char> = string.chars().collect();
+    let departure_square = string
+        .get(0..=1)
+        .ok_or(SquareParsingError::NotEnoughParts)?;
 
-    #[allow(clippy::get_first)]
-    let departure_file = match chars.get(0) {
-        Some(x) if x.is_alphabetic() => get_file_number(*x)?,
-        _ => return Err(Box::new(MoveError::InvalidFile)),
-    };
-    let target_file = match chars.get(2) {
-        Some(x) if x.is_alphabetic() => get_file_number(*x)?,
-        _ => return Err(Box::new(MoveError::InvalidFile)),
-    };
-    let departure_rank = match chars.get(1) {
-        Some(x) if x.is_ascii_digit() => x
-            .to_digit(10)
-            .expect("failed converting departure rank to number"),
-        _ => return Err(Box::new(MoveError::InvalidRank)),
-    } as u16
-        - 1;
-    let target_rank = match chars.get(3) {
-        Some(x) if x.is_ascii_digit() => x
-            .to_digit(10)
-            .expect("failed converting target rank to number"),
-        _ => return Err(Box::new(MoveError::InvalidRank)),
-    } as u16
-        - 1;
+    let target_square = string
+        .get(2..=3)
+        .ok_or(SquareParsingError::NotEnoughParts)?;
 
-    let en_passant_flag = match chars.get(4) {
-        Some(&x) => {
-            if x == '*' {
+    let departure_square = string_to_square(departure_square)?;
+    let target_square = string_to_square(target_square)?;
+
+    let en_passant_flag = match string.get(4..=4) {
+        Some(x) => {
+            if x == "*" {
                 Move::EnPassant
             } else {
                 0
@@ -201,10 +186,7 @@ fn process_move(string: &str, board: &Board) -> Result<u16> {
         None => 0,
     };
 
-    let departure_square = departure_rank * 8 + departure_file;
-    let target_square = target_rank * 8 + target_file;
-
-    Ok(departure_square | target_square << 6 | en_passant_flag)
+    Ok(departure_square as u16 | (target_square as u16) << 6 | en_passant_flag)
 }
 
 fn repr_move(v_move: u16) -> String {
@@ -218,9 +200,12 @@ fn repr_move(v_move: u16) -> String {
 
     let departure_square = v_move & 0b111111;
     let target_square = (v_move & 0b111111000000) >> 6;
+
     let (departure_file, departure_rank) = square_to_coods(departure_square);
     let (target_file, target_rank) = square_to_coods(target_square);
+
     let en_passant = if Move::is_en_passant(v_move) { "*" } else { "" };
+
     format!(
         "{}{}{}{}{}",
         get_file_letter(departure_file).unwrap(),
