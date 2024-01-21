@@ -7,6 +7,7 @@ use crate::{
     errors::{FenError, UndoMoveError},
     moves::{Move, MoveRecord},
     piece::Piece,
+    Result,
 };
 
 lazy_static! {
@@ -101,7 +102,7 @@ impl Board {
         evaluation
     }
 
-    pub fn from_fen(fen: &str) -> Result<Self, FenError> {
+    pub fn from_fen(fen: &'static str) -> Result<Self> {
         let splited_fen = fen.split_whitespace().collect::<Vec<_>>();
 
         use FenError::NotEnoughParts as FENotEnoughParts;
@@ -115,7 +116,7 @@ impl Board {
         let colour_to_move = match colour_to_move_seg {
             "w" => Colour::White,
             "b" => Colour::Black,
-            _ => return Err(FenError::NoSuchSide(colour_to_move_seg)),
+            _ => return Err(Box::new(FenError::NoSuchSide(colour_to_move_seg))),
         };
 
         use CastlingRights as CR;
@@ -156,7 +157,7 @@ impl Board {
                     'r' => Piece::Rook,
                     'q' => Piece::Queen,
                     'k' => Piece::King,
-                    _ => return Err(FenError::UnknownPiece(c)),
+                    _ => return Err(Box::new(FenError::UnknownPiece(c))),
                 };
 
                 let piece = colour | kind;
@@ -589,10 +590,10 @@ impl Board {
         string
     }
 
-    pub fn undo_move(&mut self) -> Result<(), UndoMoveError> {
+    pub fn undo_move(&mut self) -> Result<()> {
         let move_record = match self.move_history.pop() {
             Some(v) => v,
-            None => return Err(UndoMoveError::EmptyStack),
+            None => return Err(Box::new(UndoMoveError::EmptyStack)),
         };
         let v_move = move_record.v_move;
 

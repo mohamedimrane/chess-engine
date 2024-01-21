@@ -5,8 +5,13 @@ use std::{
 
 use errors::MoveError;
 use moves::Move;
+use utils::get_file_number;
 
-use crate::{board::Board, colour::Colour};
+use crate::{
+    board::Board,
+    colour::Colour,
+    utils::{get_file_letter, square_to_coods},
+};
 
 // use colored::*;
 use color_print::cprintln;
@@ -17,8 +22,11 @@ mod colour;
 mod errors;
 mod moves;
 mod piece;
+mod utils;
 
-fn main() -> Result<(), Box<dyn Error>> {
+type Result<T> = core::result::Result<T, Box<dyn Error>>;
+
+fn main() -> Result<()> {
     // let mut board = Board::from_fen("8/8/8/8/8/8/8/8 w QKqk - 0 1").unwrap();
     // let mut board =
     //     Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1").unwrap();
@@ -98,7 +106,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn get_line() -> Result<String, Box<dyn Error>> {
+fn get_line() -> Result<String> {
     print!("> ");
     stdout().flush()?;
 
@@ -135,11 +143,11 @@ fn process_line(line: String) -> (String, Option<Vec<String>>) {
     (command, args)
 }
 
-fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), MoveError> {
+fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<()> {
     let v_move = process_move(move_string, board)?;
 
     if !moves.contains(&v_move) {
-        return Err(MoveError::InvalidMove);
+        return Err(Box::new(MoveError::InvalidMove));
     }
 
     board.make_move(v_move);
@@ -147,7 +155,7 @@ fn make_move(move_string: &str, moves: &[u16], board: &mut Board) -> Result<(), 
     Ok(())
 }
 
-fn process_move(string: &str, board: &Board) -> Result<u16, MoveError> {
+fn process_move(string: &str, board: &Board) -> Result<u16> {
     if string == "o-o" || string == "O-O" || string == "0-0" {
         return Ok(Move::ShortCastle);
     }
@@ -161,24 +169,24 @@ fn process_move(string: &str, board: &Board) -> Result<u16, MoveError> {
     #[allow(clippy::get_first)]
     let departure_file = match chars.get(0) {
         Some(x) if x.is_alphabetic() => get_file_number(*x)?,
-        _ => return Err(MoveError::InvalidFile),
+        _ => return Err(Box::new(MoveError::InvalidFile)),
     };
     let target_file = match chars.get(2) {
         Some(x) if x.is_alphabetic() => get_file_number(*x)?,
-        _ => return Err(MoveError::InvalidFile),
+        _ => return Err(Box::new(MoveError::InvalidFile)),
     };
     let departure_rank = match chars.get(1) {
         Some(x) if x.is_ascii_digit() => x
             .to_digit(10)
             .expect("failed converting departure rank to number"),
-        _ => return Err(MoveError::InvalidRank),
+        _ => return Err(Box::new(MoveError::InvalidRank)),
     } as u16
         - 1;
     let target_rank = match chars.get(3) {
         Some(x) if x.is_ascii_digit() => x
             .to_digit(10)
             .expect("failed converting target rank to number"),
-        _ => return Err(MoveError::InvalidRank),
+        _ => return Err(Box::new(MoveError::InvalidRank)),
     } as u16
         - 1;
 
@@ -221,27 +229,4 @@ fn repr_move(v_move: u16) -> String {
         target_rank + 1,
         en_passant
     )
-}
-
-fn square_to_coods(square: u16) -> (u16, u16) {
-    let rank = (square as f32 / 8.).floor();
-    let file = square as f32 - rank * 8.;
-
-    (file as u16, rank as u16)
-}
-
-const FILE_LETTERS: [char; 8] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-fn get_file_letter(file: u16) -> Result<char, MoveError> {
-    FILE_LETTERS
-        .get(file as usize)
-        .copied()
-        .ok_or(MoveError::InvalidFile)
-}
-
-fn get_file_number(file: char) -> Result<u16, MoveError> {
-    FILE_LETTERS
-        .iter()
-        .position(|&a| a == file)
-        .map(|x| x as u16)
-        .ok_or(MoveError::InvalidFile)
 }
